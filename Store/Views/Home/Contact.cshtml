@@ -1,0 +1,125 @@
+﻿@model Store.Models.ContactFormModel // Adjust namespace
+
+@{
+    ViewData["Title"] = "تواصل معنا"; // Set the page title
+}
+
+<section id="contact" class="section contact-section">
+    <div class="container" data-aos="fade-up">
+        <div class="section-title text-center">
+            <h2 dir="rtl">تواصل معنا</h2>
+            <p dir="rtl">يسعدنا تواصلكم واستفساراتكم.</p>
+        </div>
+
+        <div class="row mt-5 py-5">
+            <div class="col-lg-4 g-0 text-center">
+                <div class="info-box mb-2">
+                    <i class="bi bi-map text-primary"></i>
+                    <h3 dir="rtl" class="info-box-title" style="margin-bottom: 0.3rem;">عنواننا</h3>
+                    <p dir="rtl" class="info-box-text" style="line-height: 0.7;">
+                        <a href="https://mystore.com/">MyStore</a>, الرياض, المملكة العربية السعودية
+                    </p>
+                </div>
+                <div class="info-box mb-2">
+                    <i class="bi bi-envelope text-primary"></i>
+                    <h3 dir="rtl" class="info-box-title" style="margin-bottom: 0.3rem;">بريدنا الإلكتروني</h3>
+                    <p dir="rtl" class="info-box-text" style="line-height: 0.7;">
+                        <a href="mailto:wijdane.ali@gamil.com">wijdane.ali@gmail.com</a>
+                    </p>
+                </div>
+                <div class="info-box">
+                    <i class="bi bi-phone text-primary"></i>
+                    <h3 dir="rtl" class="info-box-title" style="margin-bottom: 0.3rem;">رقم الهاتف</h3>
+                    <p dir="rtl" class="info-box-text" style="line-height: 0.7;">
+                        <a href="tel:00966566292233">00966566292233</a>
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <form method="post" asp-controller="Contact" asp-action="SubmitForm" role="form" class="php-email-form">
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <input type="text" asp-for="Name" class="form-control" id="name" placeholder="اسمك"
+                                   required dir="rtl">
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 form-group mt-3 mt-md-0">
+                            <input type="email" asp-for="Email" class="form-control" id="email"
+                                   placeholder="بريدك الإلكتروني" required dir="rtl">
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="form-group mt-3">
+                        <input type="text" asp-for="Subject" class="form-control" id="subject"
+                               placeholder="الموضوع" required dir="rtl">
+                        <span asp-validation-for="Subject" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mt-3">
+                        <textarea class="form-control" asp-for="Message" rows="5" placeholder="رسالتك" required
+                                  dir="rtl"></textarea>
+                        <span asp-validation-for="Message" class="text-danger"></span>
+                    </div>
+                    <div class="my-3">
+                        <div class="loading">جارٍ التحميل</div>
+                        <div class="error-message"></div>
+                        <div class="sent-message">تم إرسال رسالتك بنجاح. شكراً لك!</div>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit">إرسال الرسالة</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            AOS.init({
+                duration: 800,
+                easing: 'ease-in-out',
+                once: true,
+            });
+
+            $(document).ready(function () {
+                $(".php-email-form").submit(function (e) {
+                    e.preventDefault();
+
+                    let form = $(this);
+                    let loading = form.find(".loading");
+                    let sentMessage = form.find(".sent-message");
+                    let errorMessage = form.find(".error-message");
+
+                    loading.show();
+                    sentMessage.hide();
+                    errorMessage.hide();
+
+                    $.ajax({
+                        type: "POST",
+                        url: form.attr('action'), // Use the form's action attribute
+                        data: form.serialize(),
+                        success: function (response) {
+                            loading.hide();
+                            if (response.success) {
+                                sentMessage.show();
+                                form[0].reset();
+                            } else {
+                                errorMessage.text(response.message || "An error occurred. Please try again.");
+                                errorMessage.show();
+                            }
+                        },
+                        error: function () {
+                            loading.hide();
+                            errorMessage.text("Failed to send the message. Please check your network connection.");
+                            errorMessage.show();
+                        },
+                    });
+                });
+            });
+        });
+    </script>
+<partial name="_ValidationScriptsPartial" /> @* For client-side validation *@
+}
+@* todo *@

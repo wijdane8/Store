@@ -1,0 +1,72 @@
+﻿@model IEnumerable<Store.Models.Product>
+
+@{
+    ViewData["Title"] = "المنتجات";
+}
+
+<section id="products" class="section products-section">
+    <div class="container" data-aos="fade-up">
+        <div class="section-title">
+            <h2>@ViewData["Title"]</h2>
+            <p>قائمة المنتجات المتوفرة لدينا.</p>
+        </div>
+
+        <div class="row gy-4" data-aos="fade-up" data-aos-delay="200">
+            @foreach (var product in Model)
+            {
+                <div class="col-lg-4 col-md-6">
+                    <div class="product-box">
+                        <div class="product-image-container">
+                            <img src="@product.Photo"
+                                 alt="@product.Name"
+                                 class="img-fluid rounded product-image"
+                                 onerror="this.src='https://placehold.co/400x300/EEE/31343C'" />
+                        </div>
+                        <h3>@product.Name</h3>
+                        <p class="description">@product.Description</p>
+                        <p class="price">السعر: <span>@product.Price</span></p>
+                        <p>
+                            <strong>الفئة:</strong>
+                            @product.Cat?.Name
+                        </p>
+                        <a asp-action="Details" asp-route-id="@product.Id" class="btn btn-primary">التفاصيل</a>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="row mt-5 pt-3" data-aos="fade-up" data-aos-delay="400">
+                <i class="bi bi-basket3 text-success-emphasis text-center"
+                   style="font-size: 2rem;"></i>
+                <h3 class="text-center">ميزات إضافية</h3>
+                <div class="col-lg text-center text-capitalize">
+                    <p class="lead">
+                        استمتع بتجربة تسوق استثنائية مع ميزاتنا الإضافية.
+                    </p>
+                    <p>
+                        نقدم خيارات دفع متنوعة، وتوصيل سريع وموثوق، وإرجاع سهل. اكتشف مجموعتنا
+                        الواسعة من المنتجات اليوم.
+                    </p>
+                    <a href="#" class="btn btn-primary">تسوق الآن</a>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        AOS.init({
+            duration: 800,
+            easing: "ease-in-out",
+            once: true,
+        });
+        //Change the price symbol
+        const priceElements = document.querySelectorAll('.price span');
+        priceElements.forEach(priceElement => {
+            priceElement.innerHTML += '&#x53;&#x52;';
+        });
+    });
+</script>

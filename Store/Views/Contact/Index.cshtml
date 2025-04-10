@@ -1,0 +1,116 @@
+﻿@model Store.Models.ContactFormModel
+@{
+    ViewData["Title"] = "تواصل معنا";
+}
+
+<section id="contact" class="section contact-section">
+    <div class="container" data-aos="fade-up">
+        <div class="section-title text-center">
+            <h2 dir="rtl">تواصل معنا</h2>
+            <p dir="rtl">يسعدنا تواصلكم واستفساراتكم.</p>
+        </div>
+
+        <div class="row mt-5 py-5">
+            <!-- Contact Info (Left Column) -->
+            <div class="col-lg-4 g-0 text-center">
+                <div class="info-box mb-4">
+                    <i class="bi bi-map text-primary"></i>
+                    <h3 dir="rtl">عنواننا</h3>
+                    <p dir="rtl">
+                        <a href="https://mystore.com/">MyStore</a>, الرياض, المملكة العربية السعودية
+                    </p>
+                </div>
+                <div class="info-box mb-4">
+                    <i class="bi bi-envelope text-primary"></i>
+                    <h3 dir="rtl">بريدنا الإلكتروني</h3>
+                    <p dir="rtl">
+                        <a href="mailto:wijdane.ali@gmail.com">wijdane.ali@gmail.com</a>
+                    </p>
+                </div>
+                <div class="info-box">
+                    <i class="bi bi-phone text-primary"></i>
+                    <h3 dir="rtl">رقم الهاتف</h3>
+                    <p dir="rtl">
+                        <a href="tel:+966566292233">+966 56 629 2233</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Contact Form (Right Column) -->
+            <div class="col-lg-8">
+                <form method="post" asp-controller="Contact" asp-action="SubmitForm" role="form" class="php-email-form">
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <input type="text" asp-for="Name" class="form-control" placeholder="اسمك" required dir="rtl">
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 form-group mt-3 mt-md-0">
+                            <input type="email" asp-for="Email" class="form-control" placeholder="بريدك الإلكتروني" required dir="rtl">
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="form-group mt-3">
+                        <input type="text" asp-for="Subject" class="form-control" placeholder="الموضوع" required dir="rtl">
+                        <span asp-validation-for="Subject" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mt-3">
+                        <textarea asp-for="Message" class="form-control" rows="5" placeholder="رسالتك" required dir="rtl"></textarea>
+                        <span asp-validation-for="Message" class="text-danger"></span>
+                    </div>
+                    <div class="my-3">
+                        <div class="loading">جارٍ التحميل</div>
+                        <div class="error-message"></div>
+                        <div class="sent-message">تم إرسال رسالتك بنجاح. شكراً لك!</div>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">إرسال الرسالة</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" /> <!-- Client-side validation -->
+    <script>
+        $(document).ready(function () {
+            // Initialize AOS (Animate On Scroll)
+            AOS.init({ duration: 800, easing: 'ease-in-out', once: true });
+
+            // AJAX form submission
+            $(".php-email-form").submit(function (e) {
+                e.preventDefault();
+                const form = $(this);
+                const loading = form.find(".loading");
+                const errorMessage = form.find(".error-message");
+                const sentMessage = form.find(".sent-message");
+
+                loading.show();
+                errorMessage.hide();
+                sentMessage.hide();
+
+                $.ajax({
+                    type: "POST",
+                    url: form.attr("action"),
+                    data: form.serialize(),
+                    success: function (response) {
+                        loading.hide();
+                        if (response.success) {
+                            sentMessage.show();
+                            form[0].reset();
+                        } else {
+                            errorMessage.text(response.message || "حدث خطأ. يرجى المحاولة مرة أخرى.");
+                            errorMessage.show();
+                        }
+                    },
+                    error: function () {
+                        loading.hide();
+                        errorMessage.text("فشل في إرسال الرسالة. يرجى التحقق من اتصال الشبكة.");
+                        errorMessage.show();
+                    }
+                });
+            });
+        });
+    </script>
+}

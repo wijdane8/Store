@@ -1,0 +1,172 @@
+﻿@model Store.Models.Product
+@using System.Globalization
+@using Newtonsoft.Json
+
+@{
+    ViewData["Title"] = "Details";
+    var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
+    var discountPercentage = Model.OldPrice > 0 ?
+        (int)((1 - (Model.Price / Model.OldPrice)) * 100) : 0;
+}
+
+<!-- SEO Meta Tags -->
+<meta name="description" content="@Model.ShortDescription">
+<meta name="keywords" content="Product, @Model.Name, Buy Online, Store">
+<meta property="og:title" content="@Model.Name">
+<meta property="og:description" content="@Model.ShortDescription">
+<meta property="og:image" content="@(Model.Photo ?? "https://placehold.co/600x500/EEE/31343C?text=No+Image+Available")">
+<meta property="og:url" content="@Url.Action("Details", "Products", new { id = Model.Id }, ViewContext.HttpContext.Request.Scheme)">
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+    {
+        "@@context": "https://schema.org/",
+        "@@type": "Product",
+        "name": "@Model.Name",
+        "image": ["@(Model.Photo ?? "https://placehold.co/600x500/EEE/31343C?text=No+Image+Available")"],
+        "description": "@Model.ShortDescription",
+        "brand": "Store",
+        "offers": {
+            "@@type": "Offer",
+            "price": "@string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:F2}", Model.Price)",
+            "priceCurrency": "SAR",
+            "availability": "@(Model.Stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock")"
+        }
+    }
+</script>
+
+<section class="product-details-section">
+    <div class="container" data-aos="fade-up">
+        <!-- Breadcrumb Navigation -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-action="Index" asp-controller="Home">الرئيسية</a></li>
+                <li class="breadcrumb-item"><a asp-action="Index" asp-route-category="@Model.Cat">المنتجات</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+            </ol>
+        </nav>
+
+        <div class="product-details-card">
+            <div class="row g-4">
+                <!-- Product Images Column -->
+                <div class="col-lg-5">
+                    <div class="product-gallery">
+                        <!-- Main Product Image -->
+                        <div class="main-image mb-3">
+                            <img src="@(Model.Photo ?? "https://placehold.co/600x500/EEE/31343C?text=صورة+غير+متوفرة")"
+                                 alt="@Model.Name"
+                                 class="img-fluid rounded-3 zoomable"
+                                 id="mainProductImage" />
+                        </div>
+
+                        <!-- Thumbnail Gallery -->
+                        <div class="thumbnail-gallery">
+                            <div class="row g-2">
+                                <!-- Dynamically load thumbnails -->
+                                @foreach (var image in Model.ProductImages)
+                                {
+                                    <div class="col-3">
+                                        <img src="@image.ImageUrl"
+                                             alt="@Model.Name"
+                                             class="img-thumbnail thumbnail"
+                                             data-fullsize="@image.ImageUrl" />
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Info Column -->
+                <div class="col-lg-7">
+                    <div class="product-info">
+                        <!-- Product Title and Rating -->
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h1 class="product-title">@Model.Name</h1>
+                            <div class="product-share">
+                                <button class="btn btn-sm btn-outline-secondary share-btn"
+                                        data-bs-toggle="tooltip"
+                                        title="مشاركة"
+                                        aria-label="مشاركة المنتج">
+                                    <i class="bi bi-share"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Product Rating -->
+                        <div class="product-rating mb-3">
+                            <div class="stars" aria-label="التقييم 4.5 من 5">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-half"></i>
+                            </div>
+                            <span class="rating-text">(12 تقييم)</span>
+                            <a href="#reviews" class="text-muted ms-2">أضف تقييمك</a>
+                        </div>
+
+                        <!-- Price and Availability -->
+                        <div class="price-availability mb-4">
+                            <div class="price">
+                                <span class="current-price">@string.Format(CultureInfo.InvariantCulture, "{0:N2}", Model.Price) ر.س</span>
+                                @if (Model.OldPrice > 0)
+                                {
+                                    <span class="old-price">@Model.OldPrice.ToString("N2", CultureInfo.InvariantCulture) ر.س</span>
+                                    <span class="discount-badge">@discountPercentage% خصم</span>
+                                }
+                            </div>
+                            <div class="availability">
+                                @if (Model.Stock > 0)
+                                {
+                                    <span class="text-success">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        @(Model.Stock > 10 ? "متوفر في المخزن" : $"أقل من {Model.Stock} وحدة متبقية")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger">
+                                        <i class="bi bi-x-circle-fill"></i> غير متوفر حالياً
+                                    </span>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Short Description -->
+                        <div class="short-description mb-4">
+                            <p>@Model.ShortDescription</p>
+                        </div>
+
+                        <!-- Reviews Section -->
+                        <div id="reviews" class="reviews-section">
+                            <h2>التقييمات</h2>
+                            @foreach (var review in Model.ProductReviews)
+                            {
+                                <div class="review">
+                                    <strong>@review.UserName</strong>
+                                    <p>@review.Comment</p>
+                                </div>
+                            }
+                            <a href="#" class="btn btn-outline-secondary mt-3">عرض جميع التقييمات</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Lazy loading for images
+        document.querySelectorAll('img').forEach(img => img.setAttribute('loading', 'lazy'));
+
+        // Zoom functionality for main image
+        document.querySelector('.zoomable').addEventListener('click', function () {
+            const modal = new bootstrap.Modal(document.getElementById('imageZoomModal'), {});
+            document.getElementById('zoomImage').src = this.src;
+            modal.show();
+        });
+    </script>
+}
