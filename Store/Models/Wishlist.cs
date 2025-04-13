@@ -14,4 +14,5 @@ public partial class Wishlist
     public DateTime AddedDate { get; set; }
 
     public virtual Product Product { get; set; } = null!;
+    public virtual ApplicationUser User { get; set; }
 }

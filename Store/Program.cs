@@ -1,52 +1,90 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Store.Services;
 using Store.Models;
-using Microsoft.Extensions.Configuration; // Make sure this is included
+using Store.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddDbContext<MyStoreContext>(options =>  // Use MyStoreDataContext here
-     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add services to the container.
+// 1. Configure Database Context
+builder.Services.AddDbContext<MyStoreContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<MyStoreContext>();
+// 2. Configure ASP.NET Core Identity
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+    // Password settings (adjust as needed)
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequiredUniqueChars = 1;
+
+    // Lockout settings (adjust as needed)
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
+
+    // User settings
+    options.User.AllowedUserNameCharacters =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
+    options.User.RequireUniqueEmail = true;
+
+    // Sign-in settings
+    options.SignIn.RequireConfirmedAccount = true; // Keep this for email confirmation
+    options.SignIn.RequireConfirmedEmail = true;    // Ensure email is confirmed
+    options.SignIn.RequireConfirmedPhoneNumber = false;
+})
+    .AddEntityFrameworkStores<MyStoreContext>()
+    .AddDefaultTokenProviders();
+
+// Configure ApplicationUser Identity separately if needed for different options
+// builder.Services.AddIdentity<ApplicationUser, IdentityRole>(/* ApplicationUser specific options */)
+//     .AddEntityFrameworkStores<MyStoreContext>()
+//     .AddDefaultTokenProviders();
+
+// 3. Configure Authentication and Authorization (if needed beyond basic Identity)
+// builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+//     .AddJwtBearer(options => /* JWT Bearer options */);
+//
+// builder.Services.AddAuthorization(options =>
+// {
+//     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+// });
+
+// 4. Add MVC and Razor Pages
 builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
 
-// Add the email service. Important: Add this *after* AddDbContext
+// 5. Add Custom Services
 builder.Services.AddScoped<IEmailService, EmailService>();
 
-// Configure strongly typed settings. Important: Add this *after* AddDbContext
-builder.Services.Configure<SmtpSettings>(options =>  // Corrected code
-{
-    builder.Configuration.GetSection("SmtpSettings").Bind(options);
-});
-builder.Services.Configure<EmailSettings>(options => // Corrected code
-{
-    builder.Configuration.GetSection("EmailSettings").Bind(options);
-});
+// 6. Configure Strongly Typed Settings
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
-// Add logging (Log4Net example) - Adjust as needed
-builder.Logging.AddLog4Net(builder.Configuration);
+// 7. Add Logging
+builder.Logging.AddLog4Net(builder.Configuration.GetSection("Logging")); // Recommended way to configure Log4Net
 
+// 8. Build the Application
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// 9. Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseMigrationsEndPoint();
+    app.UseDeveloperExceptionPage(); // More detailed error information in development
+    // app.UseMigrationsEndPoint(); // Only needed if you are actively using EF Migrations UI
 }
 else
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -55,16 +93,20 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthorization();
+app.UseAuthentication(); // Enable authentication middleware
+app.UseAuthorization();  // Enable authorization middleware
 
-
+app.MapControllerRoute(
+    name: "areaRoute",
+    pattern: "{area}/{controller=Home}/{action=Index}/{id?}");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
 app.MapControllerRoute(
-    name: "products",  // Added a name for the products route
-    pattern: "Products/{action=Index}/{id?}");  // More specific pattern
+    name: "products",
+    pattern: "Products/{action=Index}/{id?}");
+
 app.MapRazorPages();
 
-app.Run();// Update the logging configuration to use the correct method signature
-
+app.Run();

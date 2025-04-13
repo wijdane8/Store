@@ -22,4 +22,5 @@ public partial class ProductReview
     public DateTime ReviewDate { get; set; }
 
     public virtual Product Product { get; set; } = null!;
+    public virtual ApplicationUser User { get; set; }
 }

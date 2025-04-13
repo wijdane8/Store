@@ -12,7 +12,9 @@ public partial class Cart
     public string UserId { get; set; } = null!;
 
     [ForeignKey("UserId")] // Explicitly specify the foreign key property
-    public virtual IdentityUser User { get; set; } // Navigation property to IdentityUser
+    //public virtual IdentityUser User { get; set; } // Navigation property to IdentityUser
 
     public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
+    public virtual required ApplicationUser User { get; set; }
+
 }

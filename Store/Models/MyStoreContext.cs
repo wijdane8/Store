@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Store.Models;
 
-public partial class MyStoreContext : IdentityDbContext
+public partial class MyStoreContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
 {
     public MyStoreContext()
     {
@@ -34,7 +35,8 @@ public partial class MyStoreContext : IdentityDbContext
     {
         if (!optionsBuilder.IsConfigured)
         {
-            // Consider reading the connection string from configuration as recommended.
+            // It's highly recommended to read the connection string from configuration.
+            // This direct configuration is usually for scaffolding and not production.
             optionsBuilder.UseSqlServer("Server=.;Database=MyStore;Trusted_Connection=True;TrustServerCertificate=True;");
         }
     }
@@ -49,9 +51,9 @@ public partial class MyStoreContext : IdentityDbContext
 
             entity.HasIndex(e => e.UserId, "UQ__Carts__1788CC4D665CDC9E").IsUnique();
 
-            // Configure foreign key to AspNetUsers
+            // Configure foreign key to AspNetUsers (using ApplicationUser)
             entity.HasOne(d => d.User)
-                .WithOne() // Assuming one cart per user
+                .WithOne(u => u.Cart) // Assuming one cart per user, add navigation property to ApplicationUser
                 .HasForeignKey<Cart>(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
@@ -140,9 +142,10 @@ public partial class MyStoreContext : IdentityDbContext
             entity.Property(e => e.UserId).HasMaxLength(450);
             entity.Property(e => e.UserName).HasMaxLength(256);
 
-            entity.HasOne<Microsoft.AspNetCore.Identity.IdentityUser>()
-                .WithMany()
-                .HasForeignKey(pr => pr.UserId)
+            // Configure foreign key to AspNetUsers (using ApplicationUser)
+            entity.HasOne(d => d.User)
+                .WithMany(u => u.ProductReviews) // Add navigation property to ApplicationUser
+                .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(d => d.Product).WithMany(p => p.ProductReviews)
@@ -160,9 +163,10 @@ public partial class MyStoreContext : IdentityDbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
 
-            entity.HasOne<Microsoft.AspNetCore.Identity.IdentityUser>()
-                .WithMany()
-                .HasForeignKey(w => w.UserId)
+            // Configure foreign key to AspNetUsers (using ApplicationUser)
+            entity.HasOne(d => d.User)
+                .WithMany(u => u.Wishlists) // Add navigation property to ApplicationUser
+                .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(d => d.Product).WithMany(p => p.Wishlists)
@@ -175,5 +179,6 @@ public partial class MyStoreContext : IdentityDbContext
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 
-    public virtual DbSet<Microsoft.AspNetCore.Identity.IdentityUser> Users { get; set; } // Expose IdentityUser
+    // Remove this line as IdentityDbContext already exposes DbSet<IdentityUser> and DbSet<ApplicationUser>
+    // public virtual DbSet<Microsoft.AspNetCore.Identity.IdentityUser> Users { get; set; }
 }

@@ -11,9 +11,9 @@ namespace Store.Controllers
     public class ProductsController : Controller
     {
         private readonly MyStoreContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager; // Ensure this is ApplicationUser
 
-        public ProductsController(MyStoreContext context, UserManager<IdentityUser> userManager)
+        public ProductsController(MyStoreContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;
@@ -32,7 +32,6 @@ namespace Store.Controllers
             var product = await _context.Products
                 .Include(p => p.Cat)
                 .Include(p => p.ProductImages)
-                // .Include(p => p.ProductReviews) // We are not directly using reviews in the current view
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
@@ -40,8 +39,9 @@ namespace Store.Controllers
                 return NotFound();
             }
 
-            return View(product); // Directly passing the Product object
+            return View(product);
         }
+
         // POST: Products/AddToCart
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -64,13 +64,20 @@ namespace Store.Controllers
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+            {
+                return Json(new { success = false, message = "المستخدم غير موجود" });
+            }
+
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (cart == null)
             {
-                cart = new Cart { UserId = userId };
+                cart = new Cart { UserId = userId, User = user };
                 _context.Carts.Add(cart);
                 await _context.SaveChangesAsync();
             }
@@ -185,7 +192,8 @@ namespace Store.Controllers
                 Rating = rating,
                 Title = title,
                 Comment = comment,
-                ReviewDate = DateTime.Now
+                ReviewDate = DateTime.Now,
+                User = user // Optionally set the User navigation property
             };
 
             _context.ProductReviews.Add(review);
