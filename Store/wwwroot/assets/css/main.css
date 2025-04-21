@@ -16,49 +16,48 @@
   --heading-font: "Raleway",  sans-serif;
   --nav-font: "Roboto",  sans-serif;
 }
-
 /* Global Colors - The following color variables are used throughout the website. Updating them here will change the color scheme of the entire website */
-:root { 
-  --background-color: #ffffff; /* Background color for the entire website, including individual sections */
-  --default-color: #444444; /* Default color used for the majority of the text content across the entire website */
-  --heading-color: #2c4964; /* Color for headings, subheadings and title throughout the website */
-  --accent-color: #5846f9; /* Accent color that represents your brand on the website. It's used for buttons, links, and other elements that need to stand out */
-  --surface-color: #ffffff; /* The surface color is used as a background of boxed elements within sections, such as cards, icon boxes, or other elements that require a visual separation from the global background. */
-  --contrast-color: #ffffff; /* Contrast color for text, ensuring readability against backgrounds of accent, heading, or default colors. */
+:root {
+    --background-color: #ffffff; /* white */
+    --default-color: #444444; /* gray */
+    --heading-color: #2c4964; /* dark blue */
+    --accent-color: #5846f9; /* purple */
+    --surface-color: #ffffff; /* white */
+    --contrast-color: #ffffff; /* white */
 }
 
 /* Nav Menu Colors - The following color variables are used specifically for the navigation menu. They are separate from the global colors to allow for more customization options */
 :root {
-  --nav-color: rgba(255, 255, 255, 0.8);  /* The default color of the main navmenu links */
-  --nav-hover-color: #ffffff; /* Applied to main navmenu links when they are hovered over or active */
-  --nav-mobile-background-color: #ffffff; /* Used as the background color for mobile navigation menu */
-  --nav-dropdown-background-color: #ffffff; /* Used as the background color for dropdown items that appear when hovering over primary navigation items */
-  --nav-dropdown-color: #444444; /* Used for navigation links of the dropdown items in the navigation menu. */
-  --nav-dropdown-hover-color: #5846f9; /* Similar to --nav-hover-color, this color is applied to dropdown navigation links when they are hovered over. */
+    --nav-color: rgba(255, 255, 255, 0.8); /* white with 80% opacity */
+    --nav-hover-color: #ffffff; /* white */
+    --nav-mobile-background-color: #ffffff; /* white */
+    --nav-dropdown-background-color: #ffffff; /* white */
+    --nav-dropdown-color: #444444; /* gray */
+    --nav-dropdown-hover-color: #5846f9; /* purple */
 }
 
 /* Color Presets - These classes override global colors when applied to any section or element, providing reuse of the sam color scheme. */
 
 .light-background {
-  --background-color: #f9f8ff;
-  --surface-color: #ffffff;
+    --background-color: #f9f8ff; /* light purple */
+    --surface-color: #ffffff; /* white */
 }
 
 .dark-background {
-  --background-color: #060606;
-  --default-color: #ffffff;
-  --heading-color: #ffffff;
-  --surface-color: #202020;
-  --contrast-color: #ffffff;
+    --background-color: #060606; /* very dark gray/black */
+    --default-color: #ffffff; /* white */
+    --heading-color: #ffffff; /* white */
+    --surface-color: #202020; /* dark gray */
+    --contrast-color: #ffffff; /* white */
 }
 
 .accent-background {
-  --background-color: #5846f9;
-  --default-color: #ffffff;
-  --heading-color: #ffffff;
-  --accent-color: #ffffff;
-  --surface-color: #7c25ba;
-  --contrast-color: #ffffff;
+    --background-color: #5846f9; /* purple */
+    --default-color: #ffffff; /* white */
+    --heading-color: #ffffff; /* white */
+    --accent-color: #ffffff; /* white */
+    --surface-color: #7c25ba; /* medium purple */
+    --contrast-color: #ffffff; /* white */
 }
 
 /* Smooth scroll */
@@ -250,7 +249,7 @@ h6 {
         .navmenu a,
         .navmenu a:focus {
             color: var(--default-color);
-            font-size: 15px;
+            font-size: 20px;
             padding: 0 2px;
             font-family: var(--nav-font);
             font-weight: 500;
@@ -828,10 +827,10 @@ section,
   border: 2px solid var(--contrast-color);
 }
 
-.hero .btn-get-started:hover {
-  color: var(--accent-color);
-  background: var(--contrast-color);
-}
+    .hero .btn-get-started:hover {
+        color: var(--nav-dropdown-hover-color);
+        background: var(--contrast-color);
+    }
 
 .hero .btn-watch-video {
   font-size: 16px;
@@ -2378,3 +2377,58 @@ section,
     .toast.hide {
         animation: fadeOut 0.3s ease forwards;
     }
+
+.orange-icon {
+    color: #fd7e14;
+    transition: color 0.3s ease;
+}
+
+    .orange-icon:hover {
+        color: #e86100;
+    }
+
+/* User actions styling */
+.user-actions {
+    margin-left: 1rem; /* Adjusted for RTL */
+}
+
+.auth-icon {
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.user-greeting {
+    font-size: 0.9rem;
+}
+
+.btn-logout {
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+/* Mobile responsive adjustments */
+@@media (max-width: 1199.98px) {
+    .user-actions {
+        margin-left: 0.5rem; /* Adjusted for RTL */
+    }
+}
+
+/* RTL Specific Styles */
+.navmenu ul {
+    direction: rtl; /* Ensure menu items flow from right to left */
+}
+
+    .navmenu ul li {
+        float: right; /* For older layouts, might be needed */
+    }
+
+        .navmenu ul li ul {
+            right: auto;
+            left: 0; /* Adjust dropdown positioning for RTL */
+        }
+
+.user-greeting {
+    margin-left: 0.5rem; /* Adjust spacing between icon and text */
+}

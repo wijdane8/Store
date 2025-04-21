@@ -1,24 +1,30 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿// في ملف Store/Areas/Identity/ViewModels/RegisterViewModel.cs
+using System.ComponentModel.DataAnnotations;
 
 namespace Store.Areas.Identity.ViewModels
 {
     public class RegisterViewModel
     {
-        [Required(ErrorMessage = "البريد الإلكتروني مطلوب")]
-        [EmailAddress(ErrorMessage = "البريد الإلكتروني غير صالح")]
-        public string Email { get; set; }
-
-        [Required(ErrorMessage = "اسم المستخدم مطلوب")]
+        [Required]
+        [Display(Name = "اسم المستخدم")]
         public string UserName { get; set; }
 
-        [Required(ErrorMessage = "كلمة المرور مطلوبة")]
-        [StringLength(100, ErrorMessage = "يجب أن تتكون {0} من {2} إلى {1} أحرف على الأقل.", MinimumLength = 6)]
+        [Required]
+        [EmailAddress]
+        [Display(Name = "البريد الإلكتروني")]
+        public string Email { get; set; }
+
+        [Required]
         [DataType(DataType.Password)]
+        [Display(Name = "كلمة المرور")]
         public string Password { get; set; }
 
         [DataType(DataType.Password)]
         [Display(Name = "تأكيد كلمة المرور")]
-        [Compare("Password", ErrorMessage = "كلمة المرور وتأكيد كلمة المرور غير متطابقتين.")]
+        [Compare("Password", ErrorMessage = "كلمات المرور غير متطابقة.")]
         public string ConfirmPassword { get; set; }
+
+        // إضافة الخاصية المطلوبة
+        public string ReturnUrl { get; set; }
     }
 }

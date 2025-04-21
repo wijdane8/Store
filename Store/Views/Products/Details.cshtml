@@ -184,7 +184,7 @@
                                 @foreach (var review in Model.ProductReviews)
                                 {
                                     <div class="review mb-3 p-3 border rounded">
-                                        <strong>@review.UserName</strong>
+                                        <strong>@review.User?.UserName</strong>
                                         <p class="mb-0">@review.Comment</p>
                                     </div>
                                 }

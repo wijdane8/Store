@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -6,20 +6,24 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Store.Data;
 using Store.Models;
 using Store.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Configure Database Context
+// 1. تكوين سياق قاعدة البيانات لـ Identity (ApplicationDbContext)
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))); // اتصال قاعدة بيانات Identity
+
+// 1.1. تكوين سياق قاعدة البيانات لنماذج المتجر (MyStoreContext)
 builder.Services.AddDbContext<MyStoreContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("StoreConnection"))); // قد يكون اتصال مختلف
 
-
-// 2. Configure ASP.NET Core Identity
+// 2. تكوين ASP.NET Core Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    // Password settings (adjust as needed)
+    // إعدادات كلمة المرور (عدلها حسب حاجتك)
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
     options.Password.RequireNonAlphanumeric = false;
@@ -27,60 +31,55 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequiredLength = 6;
     options.Password.RequiredUniqueChars = 1;
 
-    // Lockout settings (adjust as needed)
+    // إعدادات القفل (عدلها حسب حاجتك)
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.AllowedForNewUsers = true;
 
-    // User settings
+    // إعدادات المستخدم
     options.User.AllowedUserNameCharacters =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
     options.User.RequireUniqueEmail = true;
 
-    // Sign-in settings
-    options.SignIn.RequireConfirmedAccount = true; // Keep this for email confirmation
-    options.SignIn.RequireConfirmedEmail = true;    // Ensure email is confirmed
+    // إعدادات تسجيل الدخول
+    options.SignIn.RequireConfirmedAccount = true; // احتفظ بهذا لتأكيد البريد الإلكتروني
+    options.SignIn.RequireConfirmedEmail = true;      // تأكد من تأكيد البريد الإلكتروني
     options.SignIn.RequireConfirmedPhoneNumber = false;
 })
-    .AddEntityFrameworkStores<MyStoreContext>()
+    .AddEntityFrameworkStores<ApplicationDbContext>() // اربط Identity بـ ApplicationDbContext
     .AddDefaultTokenProviders();
 
-// Configure ApplicationUser Identity separately if needed for different options
-// builder.Services.AddIdentity<ApplicationUser, IdentityRole>(/* ApplicationUser specific options */)
-//     .AddEntityFrameworkStores<MyStoreContext>()
-//     .AddDefaultTokenProviders();
-
-// 3. Configure Authentication and Authorization (if needed beyond basic Identity)
+// 3. تكوين المصادقة والتخويل (إذا لزم الأمر بخلاف Identity الأساسي)
 // builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//     .AddJwtBearer(options => /* JWT Bearer options */);
+//    .AddJwtBearer(options => /* خيارات JWT Bearer */);
 //
 // builder.Services.AddAuthorization(options =>
 // {
-//     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+//    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
 // });
 
-// 4. Add MVC and Razor Pages
+// 4. إضافة MVC و Razor Pages
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
-// 5. Add Custom Services
+// 5. إضافة الخدمات المخصصة
 builder.Services.AddScoped<IEmailService, EmailService>();
 
-// 6. Configure Strongly Typed Settings
+// 6. تكوين الإعدادات ذات الأنواع القوية
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
-// 7. Add Logging
-builder.Logging.AddLog4Net(builder.Configuration.GetSection("Logging")); // Recommended way to configure Log4Net
+// 7. إضافة التسجيل (Logging)
+builder.Logging.AddLog4Net(builder.Configuration.GetSection("Logging")); // الطريقة الموصى بها لتكوين Log4Net
 
-// 8. Build the Application
+// 8. بناء التطبيق
 var app = builder.Build();
 
-// 9. Configure the HTTP request pipeline.
+// 9. تكوين مسار معالجة طلبات HTTP.
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage(); // More detailed error information in development
-    // app.UseMigrationsEndPoint(); // Only needed if you are actively using EF Migrations UI
+    app.UseDeveloperExceptionPage(); // معلومات خطأ أكثر تفصيلاً في بيئة التطوير
+    // app.UseMigrationsEndPoint(); // مطلوب فقط إذا كنت تستخدم واجهة ترحيلات EF بنشاط
 }
 else
 {
@@ -93,12 +92,14 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication(); // Enable authentication middleware
-app.UseAuthorization();  // Enable authorization middleware
+app.UseAuthentication(); // تفعيل وسيطة المصادقة
+app.UseAuthorization();   // تفعيل وسيطة التخويل
+
 
 app.MapControllerRoute(
-    name: "areaRoute",
-    pattern: "{area}/{controller=Home}/{action=Index}/{id?}");
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
@@ -106,6 +107,11 @@ app.MapControllerRoute(
 app.MapControllerRoute(
     name: "products",
     pattern: "Products/{action=Index}/{id?}");
+
+app.MapControllerRoute(
+        name: "areas",
+        pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+
 
 app.MapRazorPages();
 

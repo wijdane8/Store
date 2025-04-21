@@ -32,6 +32,8 @@ namespace Store.Controllers
             var product = await _context.Products
                 .Include(p => p.Cat)
                 .Include(p => p.ProductImages)
+                .Include(p => p.ProductReviews) // تضمين التقييمات
+                    .ThenInclude(pr => pr.User) // تضمين معلومات المستخدم للتقييمات
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
@@ -117,6 +119,13 @@ namespace Store.Controllers
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId); // تحميل المستخدم
+
+            if (user == null)
+            {
+                return Json(new { success = false, message = "المستخدم غير موجود" });
+            }
+
             var existingWishlistItem = await _context.Wishlists
                 .FirstOrDefaultAsync(w => w.UserId == userId && w.ProductId == productId);
 
@@ -129,7 +138,8 @@ namespace Store.Controllers
             {
                 UserId = userId,
                 ProductId = productId,
-                AddedDate = DateTime.Now
+                AddedDate = DateTime.Now,
+                User = user // تعيين خاصية User مباشرة
             };
 
             _context.Wishlists.Add(wishlistItem);
@@ -182,18 +192,22 @@ namespace Store.Controllers
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId); // تحميل المستخدم
+
+            if (user == null)
+            {
+                return Json(new { success = false, message = "المستخدم غير موجود" });
+            }
 
             var review = new ProductReview
             {
                 ProductId = productId,
                 UserId = userId,
-                UserName = user.UserName,
                 Rating = rating,
                 Title = title,
                 Comment = comment,
                 ReviewDate = DateTime.Now,
-                User = user // Optionally set the User navigation property
+                User = user // تعيين خاصية User مباشرة
             };
 
             _context.ProductReviews.Add(review);
