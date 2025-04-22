@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "تسجيل"; // Registration
     Layout = "_Layout"; // Ensure you have a proper layout
+
 }
 
 <section class="section">
@@ -16,7 +17,7 @@
                     </div>
 
 
-                    <form action="/Identity/Account/Register" method="post" novalidate>
+                    <form asp-area="Identity" asp-controller="Account" asp-action="Register" method="post" >
 
                             @Html.AntiForgeryToken()
                         <div asp-validation-summary="ModelOnly" class="php-email-form .error-message mb-4" role="alert"></div>

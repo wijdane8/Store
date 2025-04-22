@@ -1,0 +1,63 @@
+﻿@model Store.Areas.Identity.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "تسجيل الدخول";
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h3><i class="bi bi-box-arrow-in-right me-2"></i>@ViewData["Title"]</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-area="Identity" asp-controller="Account" asp-action="Login" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="ReturnUrl" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="UserNameOrEmail" class="form-label">اسم المستخدم أو البريد الإلكتروني</label>
+                            <input asp-for="UserNameOrEmail" class="form-control" autocomplete="username" />
+                            <span asp-validation-for="UserNameOrEmail" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label">كلمة المرور</label>
+                            <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input asp-for="RememberMe" class="form-check-input" />
+                            <label asp-for="RememberMe" class="form-check-label">تذكرني</label>
+                        </div>
+
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary py-2">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>دخول
+                            </button>
+                        </div>
+
+                        <div class="text-center pt-3">
+                            <p class="mb-0">
+                                ليس لديك حساب؟
+                                <a asp-area="Identity" asp-controller="Account" asp-action="Register" class="fw-bold">
+                                    إنشاء حساب جديد
+                                </a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,22 +1,34 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Store.Models; // تأكد أن هذا النطاق يحتوي على فئة ApplicationUser الخاصة بك
+using Store.Models;
 
-namespace Store.Data // أو أي نطاق اسم تفضله
+namespace Store.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options)
         {
         }
-
-        // قد لا تحتاج إلى خصائص DbSet لنماذج متجرك هنا
-        // إذا كان MyStoreContext هو المسؤول عنها.
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            // يمكنك هنا تخصيص بناء نموذج Identity (مثل إعادة تسمية الجداول الاختيارية)
+
+            // Configure the composite primary key for AspNetUserLogins
+            builder.Entity<IdentityUserLogin<string>>(entity =>
+            {
+                entity.HasKey(l => new { l.LoginProvider, l.ProviderKey });
+            });
+
+            // Optional: Customize other Identity tables if needed
+            builder.Entity<ApplicationUser>(entity =>
+            {
+                // Add your custom user configurations here
+            });
+
+            // Add other entity configurations...
         }
     }
 }

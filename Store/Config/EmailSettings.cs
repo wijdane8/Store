@@ -1,5 +1,9 @@
-﻿public class EmailSettings
+﻿namespace Store.Services
 {
-    public string ContactFormRecipient { get; set; } = "";
-    public string ContactFormSender { get; set; } = "";
+    public class EmailSettings
+    {
+        public string FromAddress { get; set; }
+        public string FromName { get; set; }
+        public string? ContactRecipientEmail { get; set; } // Add this property
+    }
 }

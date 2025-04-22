@@ -45,5 +45,16 @@ public partial class AspNetUser
 
     public virtual ICollection<AspNetUserToken> AspNetUserTokens { get; set; } = new List<AspNetUserToken>();
 
+    public virtual Cart? Cart { get; set; }
+
+    public virtual ICollection<ProductReview> ProductReviews { get; set; } = new List<ProductReview>();
+
+    public virtual ICollection<Wishlist> Wishlists { get; set; } = new List<Wishlist>();
+
     public virtual ICollection<AspNetRole> Roles { get; set; } = new List<AspNetRole>();
+
+    public static implicit operator AspNetUser(ApplicationUser v)
+    {
+        throw new NotImplementedException();
+    }
 }

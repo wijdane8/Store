@@ -10,9 +10,6 @@ public partial class ProductReview
     public int ProductId { get; set; }
 
     public string UserId { get; set; } = null!;
-    public required ApplicationUser User { get; set; }
-
-    public string? UserName { get; set; }
 
     public int Rating { get; set; }
 
@@ -23,4 +20,6 @@ public partial class ProductReview
     public DateTime ReviewDate { get; set; }
 
     public virtual Product Product { get; set; } = null!;
+
+    public virtual AspNetUser User { get; set; } = null!;
 }

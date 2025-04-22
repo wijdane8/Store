@@ -37,66 +37,6 @@ namespace Store.Migrations
                     b.ToTable("AspNetUserRoles", (string)null);
                 });
 
-            modelBuilder.Entity("Store.Models.ApplicationUser", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("AccessFailedCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("NormalizedEmail")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NormalizedUserName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("UserName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ApplicationUser");
-                });
-
             modelBuilder.Entity("Store.Models.AspNetRole", b =>
                 {
                     b.Property<string>("Id")
@@ -552,7 +492,6 @@ namespace Store.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id")
@@ -627,7 +566,7 @@ namespace Store.Migrations
 
             modelBuilder.Entity("Store.Models.Cart", b =>
                 {
-                    b.HasOne("Store.Models.ApplicationUser", "User")
+                    b.HasOne("Store.Models.AspNetUser", "User")
                         .WithOne("Cart")
                         .HasForeignKey("Store.Models.Cart", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -700,7 +639,7 @@ namespace Store.Migrations
                         .IsRequired()
                         .HasConstraintName("FK__ProductRe__Produ__4316F928");
 
-                    b.HasOne("Store.Models.ApplicationUser", "User")
+                    b.HasOne("Store.Models.AspNetUser", "User")
                         .WithMany("ProductReviews")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -720,26 +659,15 @@ namespace Store.Migrations
                         .IsRequired()
                         .HasConstraintName("FK__Wishlists__Produ__47DBAE45");
 
-                    b.HasOne("Store.Models.ApplicationUser", "User")
+                    b.HasOne("Store.Models.AspNetUser", "User")
                         .WithMany("Wishlists")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK__Wishlists__AspNetUsers");
+                        .IsRequired();
 
                     b.Navigation("Product");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Store.Models.ApplicationUser", b =>
-                {
-                    b.Navigation("Cart")
-                        .IsRequired();
-
-                    b.Navigation("ProductReviews");
-
-                    b.Navigation("Wishlists");
                 });
 
             modelBuilder.Entity("Store.Models.AspNetRole", b =>
@@ -754,6 +682,12 @@ namespace Store.Migrations
                     b.Navigation("AspNetUserLogins");
 
                     b.Navigation("AspNetUserTokens");
+
+                    b.Navigation("Cart");
+
+                    b.Navigation("ProductReviews");
+
+                    b.Navigation("Wishlists");
                 });
 
             modelBuilder.Entity("Store.Models.Cart", b =>
