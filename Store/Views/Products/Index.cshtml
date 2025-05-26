@@ -19,7 +19,15 @@
                     <div class="col-lg-4 col-md-6">
                         <div class="product-box">
                             <div class="product-image-container">
-                                <img src="@(product.Photo ?? "https://placehold.co/400x300/EEE/31343C/FFF?text=No+Image")"
+                                @{
+                                    // Find the main image where IsMain is true, or the first image if no main is specified
+                                    var mainImage = product.ProductImages?.FirstOrDefault(pi => pi.IsMain.HasValue && pi.IsMain.Value) // <--- FIX HERE
+                                    ?? product.ProductImages?.FirstOrDefault();
+
+                                    // If a main image is found, use its URL. Otherwise, use a placeholder.
+                                    string imageUrl = mainImage != null ? mainImage.ImageUrl : "https://placehold.co/400x300/EEE/31343C/FFF?text=No+Image";
+                                }
+                                <img src="@imageUrl"
                                      alt="@product.Name"
                                      class="img-fluid rounded product-image" />
                             </div>

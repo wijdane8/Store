@@ -3,7 +3,10 @@
 @{
     ViewData["Title"] = "تسجيل حساب جديد"; // عنوان الصفحة بالعربية
 }
-
+@if (!string.IsNullOrEmpty(Model.StatusMessage))
+{
+    <div class="alert alert-info" role="alert">@Html.Raw(Model.StatusMessage)</div>
+}
 <div class="container py-5">
     @* حاوية رئيسية ببادينغ علوي وسفلي كبير *@
     <h1 class="text-center mb-5 display-4 fw-bold" style="color: var(--heading-color);">@ViewData["Title"]</h1> @* عنوان كبير وبلون أساسي للموقع *@

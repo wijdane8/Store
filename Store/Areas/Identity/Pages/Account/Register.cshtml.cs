@@ -28,7 +28,7 @@ namespace Store.Areas.Identity.Pages.Account
         private readonly IUserStore<ApplicationUser> _userStore;
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
-        private readonly IEmailSender _emailSender; // قد لا تحتاجها إذا لم يكن لديك خدمة بريد إلكتروني
+        private readonly IEmailSender _emailSender;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
@@ -46,14 +46,12 @@ namespace Store.Areas.Identity.Pages.Account
         }
 
         [BindProperty]
-        public InputModel Input { get; set; } = new InputModel(); // *** تهيئة InputModel ***
+        public InputModel Input { get; set; } = new InputModel();
 
-        public string ReturnUrl { get; set; } = null!; // *** تهيئة ReturnUrl ***
+        public string ReturnUrl { get; set; } = null!;
 
-        // *** إضافة StatusMessage لمعالجة خطأ CS1061 ***
         [TempData]
         public string StatusMessage { get; set; } = null!;
-        // ************************************************
 
         public IList<AuthenticationScheme> ExternalLogins { get; set; } = new List<AuthenticationScheme>();
 
@@ -97,8 +95,9 @@ namespace Store.Areas.Identity.Pages.Account
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {
-                        StatusMessage = "تم إنشاء حسابك بنجاح. يرجى التحقق من بريدك الإلكتروني لتأكيد حسابك."; // استخدام StatusMessage
-                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
+                        // *** تغيير هنا: عرض رسالة في نفس الصفحة بدلاً من إعادة التوجيه ***
+                        StatusMessage = "تم إنشاء حسابك بنجاح. يرجى التحقق من بريدك الإلكتروني لتأكيد حسابك. " +
+                "يمكنك الآن <a href='" + Url.Page("/Account/Login", new { area = "Identity" }) + "'>تسجيل الدخول</a>."; return Page(); // العودة إلى نفس الصفحة
                     }
                     else
                     {
@@ -142,26 +141,26 @@ namespace Store.Areas.Identity.Pages.Account
         {
             [Required]
             [EmailAddress]
-            [Display(Name = "Email")]
+            [Display(Name = "البريد الإلكتروني")]
             public string Email { get; set; } = null!;
 
             [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+            [StringLength(100, ErrorMessage = "يجب أن لا تقل {0} عن {2} حرف ولا تزيد عن {1} حرف.", MinimumLength = 6)]
             [DataType(DataType.Password)]
-            [Display(Name = "Password")]
+            [Display(Name = "كلمة المرور")]
             public string Password { get; set; } = null!;
 
             [DataType(DataType.Password)]
-            [Display(Name = "Confirm password")]
-            [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+            [Display(Name = "تأكيد كلمة المرور")]
+            [Compare("Password", ErrorMessage = "كلمة المرور وتأكيد كلمة المرور غير متطابقين.")]
             public string ConfirmPassword { get; set; } = null!;
 
             [Required]
-            [Display(Name = "First Name")]
+            [Display(Name = "الاسم الأول")]
             public string FirstName { get; set; } = null!;
 
             [Required]
-            [Display(Name = "Last Name")]
+            [Display(Name = "اسم العائلة")]
             public string LastName { get; set; } = null!;
         }
     }

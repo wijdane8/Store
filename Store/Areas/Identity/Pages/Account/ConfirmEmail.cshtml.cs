@@ -1,9 +1,5 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-#nullable disable
-
+﻿// Store/Areas/Identity/Pages/Account/ConfirmEmail.cshtml.cs
 using System;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -11,10 +7,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
-using Store.Models;
+using Store.Models; // تأكد من أن هذا الـ using يشير إلى ApplicationUser الخاص بك
 
 namespace Store.Areas.Identity.Pages.Account
 {
+    [AllowAnonymous]
     public class ConfirmEmailModel : PageModel
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -24,12 +21,9 @@ namespace Store.Areas.Identity.Pages.Account
             _userManager = userManager;
         }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [TempData]
-        public string StatusMessage { get; set; }
+        public string? StatusMessage { get; set; } // اجعلها قابلة للقيمة الفارغة (nullable)
+
         public async Task<IActionResult> OnGetAsync(string userId, string code)
         {
             if (userId == null || code == null)
@@ -45,7 +39,20 @@ namespace Store.Areas.Identity.Pages.Account
 
             code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
             var result = await _userManager.ConfirmEmailAsync(user, code);
-            StatusMessage = result.Succeeded ? "Thank you for confirming your email." : "Error confirming your email.";
+
+            if (result.Succeeded)
+            {
+                StatusMessage = "شكرًا لك على تأكيد بريدك الإلكتروني. يمكنك الآن تسجيل الدخول.";
+                // *** إضافة هذا السطر لإعادة التوجيه إلى صفحة تسجيل الدخول ***
+                return RedirectToPage("./Login"); // أو "/Account/Login" إذا كانت في مسار مختلف
+            }
+            else
+            {
+                StatusMessage = "خطأ في تأكيد بريدك الإلكتروني.";
+            }
+
+            // إذا أردت عرض رسالة ConfirmEmail.cshtml بدلاً من إعادة التوجيه
+            // يمكنك إزالة سطر RedirectToPage("./Login"); وستظهر الرسالة الافتراضية
             return Page();
         }
     }

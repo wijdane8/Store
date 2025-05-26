@@ -4,9 +4,9 @@
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>متجري - قمة التسوق الإلكتروني</title>
-    <meta name="description" content="متجر متجري - وجهتك الأولى لأفضل المنتجات بجودة عالية">
-    <meta name="keywords" content="تسوق، متجري، إلكترونيات، موضة">
+    <title>المتجر - قمة التسوق الإلكتروني</title> @* تم تحديث العنوان *@
+    <meta name="description" content="متجر المتجر - وجهتك الأولى لأفضل المنتجات بجودة عالية">
+    <meta name="keywords" content="تسوق، المتجر، إلكترونيات، موضة">
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link href="~/assets/img/favicon.png" rel="icon">
@@ -21,7 +21,6 @@
     <link href="~/assets/vendor/aos/aos.css" rel="stylesheet">
     <link href="~/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
     <link href="~/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
-    
 
     <link href="~/assets/css/main.css" rel="stylesheet">
 
@@ -29,52 +28,67 @@
 
 <body class="index-page">
 
+    @* إضافة حقن UserManager و SignInManager هنا في أعلى الملف *@
+    @using Microsoft.AspNetCore.Identity
+    @using Store.Models // تأكد أن هذا يشير إلى الـ namespace الخاص بـ ApplicationUser
+    @inject UserManager<ApplicationUser> UserManager
+    @inject SignInManager<ApplicationUser> SignInManager
+
     <header id="header" class="header d-flex align-items-center fixed-top" dir="rtl">
         <div class="container-fluid container-xl d-flex align-items-center justify-content-around ">
             <div class="user-actions d-flex align-items-center gap-3 ms-xl-auto">
-            <a href="index.html" class="logo d-flex align-items-center ms-auto">
-                <h1 class="sitename">متجري</h1>
-            </a>
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="logo d-flex align-items-center ms-auto">
+                    @* تم تعديل index.html إلى asp-action *@
+                    <h1 class="sitename">المتجر</h1> @* تم تحديث الاسم *@
+                </a>
             </div>
             <div class="user-actions d-flex align-items-center gap-3 ms-xl-auto">
-            <nav id="navmenu" class="navmenu">
-                <ul>
-                    <li><a asp-area="" asp-controller="Home" asp-action="Index" class="active">الرئيسية</a></li>
-                        <li><a asp-area ="" asp-controller="Home" asp-action="About">عن متجري</a></li>
+                <nav id="navmenu" class="navmenu">
+                    <ul>
+                        <li><a asp-area="" asp-controller="Home" asp-action="Index" class="active">الرئيسية</a></li>
+                        <li><a asp-area="" asp-controller="Home" asp-action="About">عن المتجر</a></li>
                         <li><a asp-area="" asp-controller="Home" asp-action="Services">خدماتنا</a></li>
                         <li><a asp-area="" asp-controller="Products" asp-action="Index">منتجاتنا</a></li>
                         <li><a asp-area="" asp-controller="Home" asp-action="Team">فريقنا</a></li>
-                    <li class="dropdown">
-                        <a href="#"><span>المزيد</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
-                        <ul>
-                            <li><a href="#">العروض</a></li>
-                            <li class="dropdown">
-                                <a href="#"><span>المجموعات</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
-                                <ul>
-                                    <li><a href="#">إلكترونيات</a></li>
-                                    <li><a href="#">موضة</a></li>
-                                    <li><a href="#">منزلية</a></li>
-                                    <li><a href="#">إكسسوارات</a></li>
-                                    <li><a href="#">العناية</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="#">أحدث الوصلات</a></li>
-                            <li><a href="#">الأكثر مبيعاً</a></li>
-                            <li><a href="#">التخفيضات</a></li>
-                        </ul>
-                    </li>
+                        <li class="dropdown">
+                            <a href="#"><span>المزيد</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                            <ul>
+                                <li><a href="#">العروض</a></li>
+                                <li class="dropdown">
+                                    <a href="#"><span>المجموعات</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                                    <ul>
+                                        <li><a href="#">إلكترونيات</a></li>
+                                        <li><a href="#">موضة</a></li>
+                                        <li><a href="#">منزلية</a></li>
+                                        <li><a href="#">إكسسوارات</a></li>
+                                        <li><a href="#">العناية</a></li>
+                                    </ul>
+                                </li>
+                                <li><a href="#">أحدث الوصلات</a></li>
+                                <li><a href="#">الأكثر مبيعاً</a></li>
+                                <li><a href="#">التخفيضات</a></li>
+                            </ul>
+                        </li>
                         <li><a asp-area="" asp-controller="Home" asp-action="Contact">اتصل بنا</a></li>
-                </ul>
-                <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
-            </nav>
+                    </ul>
+                    <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+                </nav>
             </div>
 
-            <div class="user-actions  d-flex align-items-center gap-3 ">
-                @if (User.Identity.IsAuthenticated)
+            <div class="user-actions d-flex align-items-center gap-3 ">
+                @if (SignInManager.IsSignedIn(User))
                 {
+                    var user = await UserManager.GetUserAsync(User); // نحضر كائن المستخدم
                     <div class="d-flex align-items-center">
                         <i class="bi bi-person-circle fs-5 orange-icon ms-2" aria-hidden="true"></i>
-                        <span class="user-greeting">مرحباً، @User.Identity.Name!</span>
+                        @if (user != null)
+                        {
+                            <span class="user-greeting">مرحباً، @user.FirstName @user.LastName!</span>
+                        }
+                        else
+                        {
+                            <span class="user-greeting">مرحباً!</span>
+                        }
                     </div>
                     <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
                         <button type="submit" class="btn btn-logout" title="تسجيل الخروج">
@@ -84,15 +98,17 @@
                 }
                 else
                 {
-                    <a asp-area="Identity" asp-controller="Account" asp-action="Login" class="auth-icon" title="تسجيل الدخول">
+                    <a asp-area="Identity" asp-page="/Account/Login" class="auth-icon" title="تسجيل الدخول">
+                        @* تم تعديل asp-controller و asp-action إلى asp-page *@
                         <div class="col text-center">
                             <i class="bi bi-box-arrow-in-left fs-5 orange-icon " aria-label="تسجيل الدخول"></i>
-                            <p class="orange-icon " >تسجيل الدخول</p>
-                    </div>
+                            <p class="orange-icon ">تسجيل الدخول</p>
+                        </div>
                     </a>
-                    <a asp-area="Identity" asp-controller="Account" asp-action="Register" class="auth-icon" title="التسجيل">
+                    <a asp-area="Identity" asp-page="/Account/Register" class="auth-icon" title="التسجيل">
+                        @* تم تعديل asp-controller و asp-action إلى asp-page *@
                         <div class="col text-center">
-                        <i class="bi bi-person-plus fs-5 orange-icon" aria-label="التسجيل"></i>
+                            <i class="bi bi-person-plus fs-5 orange-icon" aria-label="التسجيل"></i>
                             <p class="orange-icon ">التسجيل</p>
                         </div>
                     </a>
@@ -102,20 +118,21 @@
         </div>
     </header>
 
-    @if (ViewContext.RouteData.Values["page"]?.ToString()?.ToLower() == "index")
+    @if (ViewContext.RouteData.Values["page"]?.ToString()?.ToLower() == "index" ||
+    ViewContext.RouteData.Values["action"]?.ToString()?.ToLower() == "index" && ViewContext.RouteData.Values["controller"]?.ToString()?.ToLower() == "home")
     {
         <section id="hero" class="hero section accent-background">
             <div class="container">
                 <div class="row gy-4">
                     <div class="col-lg-6 order-2 order-lg-1 d-flex flex-column justify-content-center">
-                        <h1>متجري - تجربة تسوق استثنائية</h1>
-                        <p>نقدم في متجري أفضل المنتجات المختارة بعناية لتلبي توقعاتكم</p>
+                        <h1>المتجر - تجربة تسوق استثنائية</h1>
+                        <p>نقدم في المتجر أفضل المنتجات المختارة بعناية لتلبي توقعاتكم</p>
                         <div class="d-flex">
-                            <a href="#about" class="btn-get-started">اكتشف متجري</a>
+                            <a href="#about" class="btn-get-started">اكتشف المتجر</a>
                         </div>
                     </div>
                     <div class="col-lg-6 order-1 order-lg-2 hero-img">
-                        <img src="~/assets/img/hero-img.png" class="img-fluid animated" alt="متجر متجري">
+                        <img src="~/assets/img/hero-img.png" class="img-fluid animated" alt="متجر المتجر">
                     </div>
                 </div>
             </div>
@@ -132,10 +149,11 @@
         <div class="container footer-top">
             <div class="row gy-4">
                 <div class="col-lg-5 col-md-12 footer-about">
-                    <a href="index.html" class="logo d-flex align-items-center">
-                        <span class="sitename">متجري</span>
+                    <a asp-area="" asp-controller="Home" asp-action="Index" class="logo d-flex align-items-center">
+                        @* تم تعديل index.html إلى asp-action *@
+                        <span class="sitename">المتجر</span>
                     </a>
-                    <p>متجري منصة تسوق رائدة تهدف إلى تقديم تجربة تسوق فريدة من نوعها بمنتجات عالية الجودة وخدمة عملاء مميزة.</p>
+                    <p>المتجر منصة تسوق رائدة تهدف إلى تقديم تجربة تسوق فريدة من نوعها بمنتجات عالية الجودة وخدمة عملاء مميزة.</p>
                     <div class="social-links d-flex mt-4">
                         <a href=""><i class="bi bi-twitter-x"></i></a>
                         <a href=""><i class="bi bi-facebook"></i></a>
@@ -147,16 +165,16 @@
                 <div class="col-lg-2 col-6 footer-links">
                     <h4>روابط مفيدة</h4>
                     <ul>
-                        <li><a href="#">الرئيسية</a></li>
-                        <li><a href="#">عن متجري</a></li>
-                        <li><a href="#">خدماتنا</a></li>
+                        <li><a asp-area="" asp-controller="Home" asp-action="Index">الرئيسية</a></li> @* تم تعديل # إلى asp-action *@
+                        <li><a asp-area="" asp-controller="Home" asp-action="About">عن المتجر</a></li> @* تم تعديل # إلى asp-action *@
+                        <li><a asp-area="" asp-controller="Home" asp-action="Services">خدماتنا</a></li> @* تم تعديل # إلى asp-action *@
                         <li><a href="#">شروط الخدمة</a></li>
                         <li><a href="#">سياسة الخصوصية</a></li>
                     </ul>
                 </div>
 
                 <div class="col-lg-2 col-6 footer-links">
-                    <h4>خدمات متجري</h4>
+                    <h4>خدمات المتجر</h4>
                     <ul>
                         <li><a href="#">التصميم الإلكتروني</a></li>
                         <li><a href="#">تطوير المتاجر</a></li>
@@ -167,7 +185,7 @@
                 </div>
 
                 <div class="col-lg-3 col-md-12 footer-contact text-center text-md-start">
-                    <h4>اتصل بمتجري</h4>
+                    <h4>اتصل بالمتجر</h4>
                     <p>الرياض، المملكة العربية السعودية</p>
                     <p class="mt-4"><strong>هاتف:</strong> <span>+966 55 123 4567</span></p>
                     <p><strong>ايميل:</strong> <span>info@zth.sa</span></p>
@@ -177,9 +195,9 @@
         </div>
 
         <div class="container copyright text-center mt-4">
-            <p>© <span>حقوق النشر</span> <strong class="px-1 sitename">متجري</strong> <span>كل الحقوق محفوظة</span></p>
+            <p>© <span>حقوق النشر</span> <strong class="px-1 sitename">المتجر</strong> <span>كل الحقوق محفوظة</span></p>
             <div class="credits">
-                صمم بواسطة <a href="https://myStore.com/">فريق متجري</a>
+                صمم بواسطة <a href="https://myStore.com/">فريق المتجر</a>
             </div>
         </div>
 
@@ -197,7 +215,6 @@
     <script src="~/assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
     <script src="~/assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
     <script src="~/assets/js/main.js"></script>
-
 
 
 </body>

@@ -21,37 +21,35 @@ namespace Store.Controllers
         }
 
         // GET: /Products
+
         public async Task<IActionResult> Index()
         {
             var products = await _context.Products
-                                         .Include(p => p.Cat) // مهم لتحميل اسم الفئة
+                                         .Include(p => p.ProductImages) // Eager load ProductImages
+                                         .Include(p => p.Cat) // Assuming you also want to load the Category name
                                          .ToListAsync();
             return View(products);
         }
 
         // GET: /Products/Details/5
-        public async Task<IActionResult> Details(int id)
+
+        public async Task<IActionResult> Details(int? id) // 'id' should be nullable if not guaranteed
         {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
             var product = await _context.Products
-                .Include(p => p.Cat)
-                .Include(p => p.ProductImages)
-                .Include(p => p.ProductReviews)
-                .FirstOrDefaultAsync(p => p.Id == id);
+                                        .Include(p => p.ProductImages) // Eager load product images
+                                        .Include(p => p.Cat)           // Eager load category
+                                        .Include(p => p.ProductReviews) // Eager load product reviews
+                                        .FirstOrDefaultAsync(m => m.Id == id);
 
             if (product == null)
             {
                 return NotFound();
             }
-
-            // إذا كنت تحتاج إلى معلومات المستخدم للتقييمات، يمكن تحميلها هنا
-            // foreach (var review in product.ProductReviews ?? Enumerable.Empty<ProductReview>())
-            // {
-            //     if (review.UserId != null)
-            //     {
-            //         var user = await _userManager.FindByIdAsync(review.UserId);
-            //         // review.UserDisplayName = user?.UserName; // مثال لإضافة اسم المستخدم إلى خاصية مؤقتة
-            //     }
-            // }
 
             return View(product);
         }
