@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -6,22 +6,23 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Store.Data;
-using Store.Models;
+using Store.Models; // تأكد من وجود هذا الـ using لـ MyStoreContext و ApplicationUser
 using Store.Services;
-using Microsoft.AspNetCore.Identity.UI.Services; // Add this using statement
+using Microsoft.AspNetCore.Identity.UI.Services;
+using System;
+using Store.Data.Seed; // تأكد من مسار DbInitializer الخاص بك
+
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Configure the database context for Identity (ApplicationDbContext)
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))); // Identity database connection
+// *** 1. دمج تكوين DbContext واحد لكل من Identity وجداول المتجر (MyStoreContext) ***
+var connectionString = builder.Configuration.GetConnectionString("StoreConnection") ??
+                       throw new InvalidOperationException("Connection string 'StoreConnection' not found.");
 
-// 1.1. Configure the database context for store models (MyStoreContext)
 builder.Services.AddDbContext<MyStoreContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("StoreConnection"))); // Could be a different connection
+    options.UseSqlServer(connectionString));
 
-// 2. Configure ASP.NET Core Identity
+// *** 2. تكوين ASP.NET Core Identity لـ MyStoreContext ***
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     // Password settings (adjust as needed)
@@ -43,46 +44,64 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.User.RequireUniqueEmail = true;
 
     // Sign-in settings
-    options.SignIn.RequireConfirmedAccount = true; // Keep this for email confirmation
-    options.SignIn.RequireConfirmedEmail = true;      // Ensure email is confirmed
+    options.SignIn.RequireConfirmedAccount = true;
+    options.SignIn.RequireConfirmedEmail = true;
     options.SignIn.RequireConfirmedPhoneNumber = false;
 })
-    .AddEntityFrameworkStores<ApplicationDbContext>() // Link Identity to ApplicationDbContext
+    .AddEntityFrameworkStores<MyStoreContext>() // *** هنا نشير إلى MyStoreContext ***
     .AddDefaultTokenProviders();
 
-// 3. Configure Authentication and Authorization (if needed beyond basic Identity)
-// builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//     .AddJwtBearer(options => /* JWT Bearer options */);
-//
-// builder.Services.AddAuthorization(options =>
-// {
-//     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-// });
-
-// 4. Add MVC and Razor Pages
+// 3. Add MVC and Razor Pages
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
-// 5. Add custom services
+// 4. Add custom services
 builder.Services.AddScoped<IEmailService, EmailService>();
-// Register your custom IEmailService as the IEmailSender that Identity UI needs
 builder.Services.AddTransient<IEmailSender, EmailService>();
 
-// 6. Configure strongly typed settings
+// 5. Configure strongly typed settings
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
-// 7. Add logging
-builder.Logging.AddLog4Net(builder.Configuration.GetSection("Logging")); // Recommended way to configure Log4Net
-
-// 8. Build the application
+// 6. Build the application
 var app = builder.Build();
 
-// 9. Configure the HTTP request pipeline.
+// *** بداية كود Seed Data (تطبيق Migrations وتغذية البيانات) ***
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<MyStoreContext>();
+
+        // *** تطبيق الهجرات تلقائيًا (مهم جداً في بيئة التطوير) ***
+        // هذا سيقوم بتطبيق جميع الهجرات (Identity وجداول المتجر) في MyStoreContext
+        context.Database.Migrate();
+
+        // استدعاء ميثود تهيئة البيانات (إذا كنت تريد إضافة بيانات أولية للمتجر)
+        // تأكد من أن DbInitializer.Initialize يتلقى MyStoreContext
+        DbInitializer.Initialize(context);
+
+        // إذا أردت seeding مستخدمين Identity (يتطلب UserManager و RoleManager)
+        // يمكنك حقنهم في DbInitializer أو Passهما هنا إذا كانت طريقة Initialize تسمح بذلك
+        // مثال (تتطلب تعديل DbInitializer لاستقبال UserManager/RoleManager):
+        // var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        // var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        // DbInitializer.InitializeIdentity(context, userManager, roleManager);
+
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred creating the DB or seeding data.");
+    }
+}
+// *** نهاية كود Seed Data ***
+
+// 7. Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage(); // More detailed error information in development
-    // app.UseMigrationsEndPoint(); // Only needed if you actively use EF migrations UI
+    app.UseDeveloperExceptionPage();
 }
 else
 {
@@ -95,8 +114,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication(); // Enable authentication middleware
-app.UseAuthorization();    // Enable authorization middleware
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "areas",
@@ -105,10 +124,6 @@ app.MapControllerRoute(
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
-app.MapControllerRoute(
-    name: "products",
-    pattern: "Products/{action=Index}/{id?}");
 
 app.MapRazorPages();
 

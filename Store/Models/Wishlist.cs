@@ -1,19 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// File: Store/Models/Wishlist.cs
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Store.Models;
-
-public partial class Wishlist
+namespace Store.Models
 {
-    public int Id { get; set; }
+    public class Wishlist
+    {
+        [Key]
+        public int Id { get; set; }
 
-    public string UserId { get; set; } = null!;
+        [Required]
+        public string UserId { get; set; } = null!;
 
-    public int ProductId { get; set; }
+        // *** إضافة خاصية التنقل User هنا ***
+        [ForeignKey("UserId")]
+        public virtual ApplicationUser User { get; set; } = null!; // يجب تهيئتها لتجنب CS8618
+        // **********************************
 
-    public DateTime AddedDate { get; set; }
+        [Required]
+        public int ProductId { get; set; }
+        [ForeignKey("ProductId")]
+        public virtual Product Product { get; set; } = null!;
 
-    public virtual Product Product { get; set; } = null!;
-
-    public virtual AspNetUser User { get; set; } = null!;
+        [Column(TypeName = "datetime")]
+        public DateTime AddedDate { get; set; } = DateTime.Now; // تعيين قيمة افتراضية
+    }
 }

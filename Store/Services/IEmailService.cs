@@ -1,13 +1,13 @@
-﻿using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity.UI.Services;
+﻿// Store.Services/IEmailService.cs
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity.UI.Services; // تأكد من هذا الـ using
+using Store.Models; // تأكد من هذا الـ using لـ ContactFormModel
 
 namespace Store.Services
 {
+    // اجعل IEmailService ترث من IEmailSender
     public interface IEmailService : IEmailSender
     {
-        Task SendEmailAsync(string email, string subject, string htmlMessage);
-
-        // Add the declaration for your contact form email method:
-        Task SendContactFormEmailAsync(Store.Models.ContactFormModel model); // Assuming your model is in the Store.Models namespace
+        Task SendContactFormEmailAsync(ContactFormModel model);
     }
 }

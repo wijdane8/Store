@@ -1,13 +1,16 @@
-﻿using Microsoft.Extensions.Logging;
+﻿// Store.Services/EmailService.cs
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net.Mail;
 using System.Net;
 using System.Threading.Tasks;
-using Store.Models; // Make sure to include the namespace for ContactFormModel
+using Store.Models;
+using System;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace Store.Services
 {
-    public class EmailService : IEmailService
+    public class EmailService : IEmailService, IEmailSender
     {
         private readonly ILogger<EmailService> _logger;
         private readonly SmtpSettings _smtpSettings;
@@ -22,24 +25,60 @@ namespace Store.Services
 
         public async Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
-            // Your existing SendEmailAsync implementation
             try
             {
+                if (string.IsNullOrEmpty(_emailSettings.FromAddress))
+                {
+                    _logger.LogError("Email 'FromAddress' is not configured in EmailSettings. Cannot send email.");
+                    throw new ArgumentNullException(nameof(_emailSettings.FromAddress), "Email 'FromAddress' is not configured.");
+                }
+                if (string.IsNullOrEmpty(_smtpSettings.Server) || _smtpSettings.Port == 0)
+                {
+                    _logger.LogError("SMTP Server or Port is not configured.");
+                    throw new InvalidOperationException("SMTP server settings are incomplete.");
+                }
+
+                string smtpUsername = _smtpSettings.Username ?? string.Empty;
+                string smtpPassword = _smtpSettings.Password ?? string.Empty;
+
                 using (var client = new SmtpClient(_smtpSettings.Server, _smtpSettings.Port))
                 {
-                    client.Credentials = new NetworkCredential(_smtpSettings.Username, _smtpSettings.Password);
-                    client.EnableSsl = _smtpSettings.EnableSsl;
+                    // *** التعديل هنا: استخدام TryParse أو التأكد من النوع بشكل مباشر ***
+                    // الأفضل هو التأكد أن التحميل من appsettings.json يعمل بشكل سليم
+                    // ولكن لتجنب هذا الخطأ بالتحديد:
+                    bool enableSslValue;
+                    if (_smtpSettings.EnableSsl is bool sslValue) // التحقق من أنها bool بالفعل
+                    {
+                        enableSslValue = sslValue;
+                    }
+                    else if (bool.TryParse(_smtpSettings.EnableSsl.ToString(), out sslValue)) // محاولة التحويل من string إذا كانت كذلك
+                    {
+                        enableSslValue = sslValue;
+                    }
+                    else
+                    {
+                        _logger.LogError("SmtpSettings.EnableSsl could not be converted to boolean. Defaulting to false.");
+                        enableSslValue = false; // قيمة افتراضية إذا فشل التحويل
+                    }
+                    client.EnableSsl = enableSslValue; // السطر 79 تقريباً بعد التعديل
+
+                    client.UseDefaultCredentials = false;
+                    client.Credentials = new NetworkCredential(smtpUsername, smtpPassword);
+                    client.DeliveryMethod = SmtpDeliveryMethod.Network;
+
+                    string finalSubject = subject ?? string.Empty;
+                    string finalHtmlMessage = htmlMessage ?? string.Empty;
 
                     var mailMessage = new MailMessage(
                         _emailSettings.FromAddress,
                         email,
-                        subject,
-                        htmlMessage
+                        finalSubject,
+                        finalHtmlMessage
                     );
                     mailMessage.IsBodyHtml = true;
 
                     await client.SendMailAsync(mailMessage);
-                    _logger.LogInformation($"Email sent successfully to {email} with subject '{subject}'.");
+                    _logger.LogInformation($"Email sent successfully to {email} from {_emailSettings.FromAddress}");
                 }
             }
             catch (Exception ex)
@@ -49,30 +88,58 @@ namespace Store.Services
             }
         }
 
-        // Implement the SendContactFormEmailAsync method:
         public async Task SendContactFormEmailAsync(ContactFormModel model)
         {
-            var subject = "New Contact Form Submission";
-            var htmlMessage = $@"
-                <p><strong>Name:</strong> {model.Name}</p>
-                <p><strong>Email:</strong> {model.Email}</p>
-                <p><strong>Subject:</strong> {model.Subject}</p>
-                <p><strong>Message:</strong></p>
-                <p>{model.Message}</p>
-            ";
+            string emailSubject = (string)(model.Subject ?? string.Empty);
+            string emailBody = $"From: {model.Name} ({model.Email})\n\n{model.Message}";
 
             try
             {
+                if (string.IsNullOrEmpty(_emailSettings.FromAddress))
+                {
+                    _logger.LogError("Email 'FromAddress' is not configured in EmailSettings for contact form. Cannot send email.");
+                    throw new ArgumentNullException(nameof(_emailSettings.FromAddress), "Email 'FromAddress' is not configured for contact form.");
+                }
+                if (string.IsNullOrEmpty(_emailSettings.ContactRecipientEmail))
+                {
+                    _logger.LogWarning("Email 'ContactRecipientEmail' is not configured in EmailSettings. Using FromAddress as recipient for contact form.");
+                }
+                if (string.IsNullOrEmpty(_smtpSettings.Server) || _smtpSettings.Port == 0)
+                {
+                    _logger.LogError("SMTP Server or Port is not configured for contact form.");
+                    throw new InvalidOperationException("SMTP server settings are incomplete for contact form.");
+                }
+
+                string smtpUsername = _smtpSettings.Username ?? string.Empty;
+                string smtpPassword = _smtpSettings.Password ?? string.Empty;
+
                 using (var client = new SmtpClient(_smtpSettings.Server, _smtpSettings.Port))
                 {
-                    client.Credentials = new NetworkCredential(_smtpSettings.Username, _smtpSettings.Password);
-                    client.EnableSsl = _smtpSettings.EnableSsl;
+                    bool enableSslValue;
+                    if (_smtpSettings.EnableSsl is bool sslValue)
+                    {
+                        enableSslValue = sslValue;
+                    }
+                    else if (bool.TryParse(_smtpSettings.EnableSsl.ToString(), out sslValue))
+                    {
+                        enableSslValue = sslValue;
+                    }
+                    else
+                    {
+                        _logger.LogError("SmtpSettings.EnableSsl could not be converted to boolean for contact form. Defaulting to false.");
+                        enableSslValue = false;
+                    }
+                    client.EnableSsl = enableSslValue;
+
+                    client.UseDefaultCredentials = false;
+                    client.Credentials = new NetworkCredential(smtpUsername, smtpPassword);
+                    client.DeliveryMethod = SmtpDeliveryMethod.Network;
 
                     var mailMessage = new MailMessage(
-                        _emailSettings.FromAddress, // Or perhaps a dedicated admin email
-                        _emailSettings.ContactRecipientEmail ?? _emailSettings.FromAddress, // Send to a contact recipient if configured
-                        subject,
-                        htmlMessage
+                        _emailSettings.FromAddress,
+                        _emailSettings.ContactRecipientEmail ?? _emailSettings.FromAddress,
+                        emailSubject,
+                        emailBody
                     );
                     mailMessage.IsBodyHtml = true;
 
@@ -87,4 +154,5 @@ namespace Store.Services
             }
         }
     }
+
 }

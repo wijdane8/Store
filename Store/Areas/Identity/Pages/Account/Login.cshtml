@@ -1,83 +1,121 @@
 ﻿@page
 @model LoginModel
-
 @{
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = "تسجيل الدخول"; // عنوان الصفحة بالعربية
 }
 
-<h1>@ViewData["Title"]</h1>
-<div class="row">
-    <div class="col-md-4">
-        <section>
-            <form id="account" method="post">
-                <h2>Use a local account to log in.</h2>
-                <hr />
-                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                    <label asp-for="Input.Email" class="form-label">Email</label>
-                    <span asp-validation-for="Input.Email" class="text-danger"></span>
-                </div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                    <label asp-for="Input.Password" class="form-label">Password</label>
-                    <span asp-validation-for="Input.Password" class="text-danger"></span>
-                </div>
-                <div class="checkbox mb-3">
-                    <label asp-for="Input.RememberMe" class="form-label">
-                        <input class="form-check-input" asp-for="Input.RememberMe" />
-                        @Html.DisplayNameFor(m => m.Input.RememberMe)
-                    </label>
-                </div>
-                <div>
-                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-                </div>
-                <div>
-                    <p>
-                        <a id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
-                    </p>
-                    <p>
-                        <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register as a new user</a>
-                    </p>
-                    <p>
-                        <a id="resend-confirmation" asp-page="./ResendEmailConfirmation">Resend email confirmation</a>
-                    </p>
-                </div>
-            </form>
-        </section>
-    </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to log in.</h3>
-            <hr />
-            @{
-                if ((Model.ExternalLogins?.Count ?? 0) == 0)
-                {
-                    <div>
-                        <p>
-                            There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">article
-                            about setting up this ASP.NET application to support logging in via external services</a>.
-                        </p>
-                    </div>
-                }
-                else
-                {
-                    <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
-                        <div>
+<div class="container py-5">
+    @* حاوية رئيسية ببادينغ علوي وسفلي كبير *@
+    <h1 class="text-center mb-5 display-4 fw-bold" style="color: var(--heading-color);">@ViewData["Title"]</h1> @* عنوان كبير وبلون Heading Color *@
+
+    @* رسائل الخطأ العامة (مثلاً: "محاولة تسجيل دخول غير صالحة." أو "يجب تأكيد بريدك الإلكتروني") *@
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show text-center mb-4" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i> @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @* هذا الجزء لعرض أخطاء ModelState بشكل عام (مثل: "صيغة البريد الإلكتروني غير صحيحة.") *@
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4 text-center" role="alert"></div>
+
+
+    <div class="row justify-content-center g-4">
+        @* استخدام g-4 لإنشاء مسافة بين الأعمدة *@
+        @* قسم تسجيل الدخول المحلي (العمود الأيمن/الأيسر حسب اتجاه النص) *@
+        <div class="col-md-8 col-lg-6 col-xl-5">
+            @* عرض متوسط للعرض، يتغير حسب الشاشة *@
+            <div class="card shadow-lg border-0 rounded-lg-3" style="background-color: var(--surface-color);">
+                @* بطاقة بتظليل كبير وحواف دائرية ولون السطح *@
+                <div class="card-body p-5">
+                    @* بادينغ داخلي كبير للبطاقة *@
+                    <h2 class="card-title text-center mb-4 fw-bold" style="color: var(--heading-color);">استخدام حساب محلي لتسجيل الدخول</h2> @* عنوان داخل البطاقة بنفس لون العناوين *@
+                    <hr class="mb-4" style="border-color: var(--default-color);" /> @* خط فاصل بلون رمادي محايد *@
+                    <form id="account" method="post">
+                        @* حقل البريد الإلكتروني *@
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                            <label asp-for="Input.Email" style="color: var(--default-color);"><i class="fas fa-envelope me-2"></i> البريد الإلكتروني</label>
+                            <span asp-validation-for="Input.Email" class="text-danger small mt-1"></span>
+                        </div>
+
+                        @* حقل كلمة المرور *@
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+                            <label asp-for="Input.Password" style="color: var(--default-color);"><i class="fas fa-lock me-2"></i> كلمة المرور</label>
+                            <span asp-validation-for="Input.Password" class="text-danger small mt-1"></span>
+                        </div>
+
+                        @* مربع "تذكرني" *@
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" asp-for="Input.RememberMe" id="Input.RememberMe" />
+                            <label class="form-check-label" for="Input.RememberMe" style="color: var(--default-color);">
+                                @Html.DisplayNameFor(m => m.Input.RememberMe)
+                            </label>
+                        </div>
+
+                        @* زر تسجيل الدخول *@
+                        <div class="d-grid gap-2 mb-4">
+                            <button id="login-submit" type="submit" class="w-100 btn btn-lg fw-bold py-3" style="background-color: var(--accent-color); border-color: var(--accent-color); color: var(--contrast-color);">
+                                <i class="fas fa-sign-in-alt me-2"></i> تسجيل الدخول
+                            </button>
+                        </div>
+
+                        @* روابط إضافية *@
+                        <div class="text-center" style="color: var(--default-color);">
                             <p>
-                                @foreach (var provider in Model.ExternalLogins!)
-                                {
-                                    <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
-                                }
+                                <a id="forgot-password" asp-page="./ForgotPassword" class="text-decoration-none fw-bold" style="color: var(--accent-color);">نسيت كلمة المرور؟</a>
+                            </p>
+                            <p>
+                                <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none fw-bold" style="color: var(--accent-color);">سجل كمستخدم جديد</a>
+                            </p>
+                            <p>
+                                <a id="resend-confirmation" asp-page="./ResendEmailConfirmation" class="text-decoration-none fw-bold" style="color: var(--accent-color);">إعادة إرسال تأكيد البريد الإلكتروني</a>
                             </p>
                         </div>
                     </form>
-                }
-            }
-        </section>
+                </div>
+            </div>
+        </div>
+
+        @* قسم تسجيل الدخول الخارجي (العمود الأيسر/الأيمن حسب اتجاه النص) *@
+        <div class="col-md-8 col-lg-6 col-xl-5">
+            <div class="card shadow-lg border-0 rounded-lg-3" style="background-color: var(--surface-color);">
+                <div class="card-body p-5">
+                    <h3 class="card-title text-center mb-4 fw-bold" style="color: var(--heading-color);">أو استخدم خدمة أخرى لتسجيل الدخول</h3>
+                    <hr class="mb-4" style="border-color: var(--default-color);" />
+                    @{
+                        // تم معالجة Nullability هنا باستخدام '?.Count ?? 0' لتجنب تحذير CS8602
+                        if ((Model.ExternalLogins?.Count ?? 0) == 0)
+                        {
+                            <div class="text-center" style="color: var(--default-color);">
+                                <p>
+                                    لم يتم تكوين أي خدمات مصادقة خارجية حاليًا. راجع <a href="https://go.microsoft.com/fwlink/?LinkID=532715" target="_blank" class="text-decoration-none fw-bold" style="color: var(--accent-color);">هذا المقال</a>
+                                    حول كيفية إعداد تطبيق ASP.NET Core هذا لدعم تسجيل الدخول عبر الخدمات الخارجية.
+                                </p>
+                            </div>
+                        }
+                        else
+                        {
+                            <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal text-center">
+                                <div class="d-grid gap-3">
+                                    @foreach (var provider in Model.ExternalLogins!) // ! لتأكيد عدم Null
+                                    {
+                                        <button type="submit" class="btn btn-lg fw-bold" name="provider" value="@provider.Name" title="تسجيل الدخول باستخدام حسابك @provider.DisplayName" style="background-color: var(--surface-color); border-color: var(--default-color); color: var(--default-color);">
+                                            <i class="fab fa-@provider.DisplayName.ToLower() me-2"></i> تسجيل الدخول عبر @provider.DisplayName
+                                        </button>
+                                    }
+                                </div>
+                            </form>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 }

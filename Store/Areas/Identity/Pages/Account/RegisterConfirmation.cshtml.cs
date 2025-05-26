@@ -1,4 +1,5 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+﻿// Store\Areas\Identity\Pages\Account\RegisterConfirmation.cshtml.cs
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
@@ -45,6 +46,11 @@ namespace Store.Areas.Identity.Pages.Account
         /// </summary>
         public string EmailConfirmationUrl { get; set; }
 
+        // *** هذا السطر هو الذي يجب أن يكون موجوداً بالضبط ***
+        [TempData]
+        public string StatusMessage { get; set; }
+        // *************************************************
+
         public async Task<IActionResult> OnGetAsync(string email, string returnUrl = null)
         {
             if (email == null)
@@ -60,8 +66,9 @@ namespace Store.Areas.Identity.Pages.Account
             }
 
             Email = email;
-            // Once you add a real email sender, you should remove this code that lets you confirm the account
-            DisplayConfirmAccountLink = true;
+            // يتم التحكم في DisplayConfirmAccountLink من إعدادات Identity في Program.cs
+            DisplayConfirmAccountLink = _userManager.Options.SignIn.RequireConfirmedAccount;
+
             if (DisplayConfirmAccountLink)
             {
                 var userId = await _userManager.GetUserIdAsync(user);
@@ -73,6 +80,7 @@ namespace Store.Areas.Identity.Pages.Account
                     values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                     protocol: Request.Scheme);
             }
+            // لا تقم بتعيين StatusMessage هنا. سيتم تعيينها في Register.cshtml.cs
 
             return Page();
         }

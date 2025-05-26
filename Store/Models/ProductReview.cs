@@ -1,25 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// File: Store/Models/ProductReview.cs
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Store.Models;
-
-public partial class ProductReview
+namespace Store.Models
 {
-    public int Id { get; set; }
+    public class ProductReview
+    {
+        [Key]
+        public int Id { get; set; }
 
-    public int ProductId { get; set; }
+        [Required]
+        public int ProductId { get; set; }
+        [ForeignKey("ProductId")]
+        public virtual Product Product { get; set; } = null!;
 
-    public string UserId { get; set; } = null!;
+        [Required]
+        public string UserId { get; set; } = null!;
 
-    public int Rating { get; set; }
+        // *** إضافة خاصية التنقل User هنا ***
+        [ForeignKey("UserId")]
+        public virtual ApplicationUser User { get; set; } = null!; // يجب تهيئتها لتجنب CS8618
+        // **********************************
 
-    public string? Title { get; set; }
+        [Range(1, 5)]
+        public int Rating { get; set; }
 
-    public string? Comment { get; set; }
+        [StringLength(255)]
+        public string Title { get; set; } = null!;
 
-    public DateTime ReviewDate { get; set; }
+        [StringLength(1000)]
+        public string Comment { get; set; } = null!;
 
-    public virtual Product Product { get; set; } = null!;
-
-    public virtual AspNetUser User { get; set; } = null!;
+        [Column(TypeName = "datetime")]
+        public DateTime ReviewDate { get; set; }
+    }
 }

@@ -2,10 +2,10 @@
 
 #nullable disable
 
-namespace Store.Migrations.ApplicationDb
+namespace Store.Migrations
 {
     /// <inheritdoc />
-    public partial class megaChanges : Migration
+    public partial class FreshDatabaseInit : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

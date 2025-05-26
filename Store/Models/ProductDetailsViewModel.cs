@@ -1,17 +1,15 @@
-﻿// Controllers/ProductsController.cs
+﻿// Store/Models/ProductDetailsViewModel.cs (إذا كان موجودًا)
+using System.Collections.Generic;
+
 namespace Store.Models
 {
-    internal class ProductDetailsViewModel
+    public class ProductDetailsViewModel
     {
-        public Product Product { get; set; }
-        public decimal? DiscountPercent { get; set; }
-        public string StockStatus { get; set; }
-        public List<Product> RelatedProducts { get; set; }
-        public List<ProductImage> ProductImages { get; set; }
-        public List<ProductReview> Reviews { get; set; }
-        public double AverageRating { get; set; }
-        public int ReviewCount { get; set; }
-        public bool IsAuthenticated { get; set; }
-        public bool IsInWishlist { get; set; }
+        public Product Product { get; set; } = null!; // حل CS8618
+        public string StockStatus { get; set; } = null!; // حل CS8618
+        public List<Product> RelatedProducts { get; set; } = new List<Product>(); // حل CS8618
+        public List<ProductImage> ProductImages { get; set; } = new List<ProductImage>(); // حل CS8618
+        public List<ProductReview> ProductReviews { get; set; } = new List<ProductReview>(); // حل CS8618
+        // تأكد من أن جميع المجموعات والخصائص غير القابلة للقيم الخالية مهيأة
     }
 }
