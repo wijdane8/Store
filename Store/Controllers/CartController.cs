@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Models;
+using System.Diagnostics;
 using System.Security.Claims;
 
 namespace Store.Controllers
@@ -10,6 +11,12 @@ namespace Store.Controllers
     public class CartController : Controller
     {
         private readonly MyStoreContext _context;
+
+        // Make sure you have this constructor
+        public CartController(MyStoreContext context)
+        {
+            _context = context; // This should NOT be null
+        }
         [HttpPost]
         public IActionResult AddToCart(int productId, int quantity, bool redirectToCheckout = false)
         {
@@ -20,31 +27,35 @@ namespace Store.Controllers
         }
         // Controllers/CartController.cs
         [Authorize]
-
         public async Task<IActionResult> Index()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
+            try
             {
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                var cart = await _context.Carts
+                    .Include(c => c.CartItems)
+                        .ThenInclude(ci => ci.Product)
+                            .ThenInclude(p => p.ProductImages)
+                    .FirstOrDefaultAsync(c => c.UserId == userId && c.Status == CartStatus.Active);
+
+                var model = new CartViewModel
+                {
+                    CartItems = cart?.CartItems?.ToList() ?? new List<CartItem>(),
+                    TotalPrice = cart?.CartItems.Sum(ci => ci.Quantity * ci.Price) ?? 0,
+                    TotalItems = cart?.CartItems.Sum(ci => ci.Quantity) ?? 0
+                };
+
+                return View(model);
             }
-
-            var cart = await _context.Carts
-                .Include(c => c.CartItems)
-                    .ThenInclude(ci => ci.Product) // Include product details
-                        .ThenInclude(p => p.ProductImages) // And product images
-                .FirstOrDefaultAsync(c => c.UserId == userId && c.Status == CartStatus.Active);
-
-            // This is the line that's likely causing the CS0266 error
-            // If you're trying to assign cart.CartItems directly to a List<CartItem> in a ViewModel
-
-            var cartViewModel = new CartViewModel
+            catch (Exception ex)
             {
-                // SOLUTION: Use .ToList() to convert ICollection<CartItem> to List<CartItem>
-                CartItems = cart?.CartItems.ToList() ?? new List<CartItem>() // Line ~40
-            };
-
-            return View(cartViewModel);
+                return View("Error", new ErrorViewModel
+                {
+                    RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
+                    Message = "Failed to load cart: " + ex.Message
+                });
+            }
         }
         [HttpPost]
         [Authorize]

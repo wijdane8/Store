@@ -555,10 +555,7 @@
                                 quantity: quantity
                             })
                         });
-                                if (result.success) {
-            await updateCartCount(); // Update the counter
-            Swal.fire({ ... });
-        }
+
                         // Improved error handling: attempt to read JSON message from server
                         if (!response.ok) {
                             const errorData = await response.json(); // Assuming controller always returns JSON for errors

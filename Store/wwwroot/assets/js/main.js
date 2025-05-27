@@ -205,7 +205,7 @@
             console.error('Failed to update cart count:', error);
         }
     }
-
+    
     // Initialize cart count when page loads
     document.addEventListener('DOMContentLoaded', updateCartCount);
   /**
