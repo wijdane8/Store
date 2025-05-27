@@ -1,0 +1,105 @@
+﻿@model WishlistViewModel
+@{
+    ViewData["Title"] = "قائمة الأمنيات";
+}
+
+<div class="container py-5">
+    <h1 class="mb-4">قائمة الأمنيات</h1>
+
+    @if (Model.Items.Any())
+    {
+        <div class="row">
+            @foreach (var item in Model.Items)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <img src="@(item.Product.ProductImages.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png")"
+                             class="card-img-top" alt="@item.Product.Name">
+                        <div class="card-body">
+                            <h5 class="card-title">@item.Product.Name</h5>
+                            <p class="card-text text-muted">@item.Product.ShortDescription</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold">@item.Product.Price.ToString("N2") ر.س</span>
+                                <div>
+                                    <button class="btn btn-outline-danger remove-wishlist"
+                                            data-id="@item.Id" title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <button class="btn btn-primary add-to-cart"
+                                            data-id="@item.ProductId" title="إضافة إلى السلة">
+                                        <i class="fas fa-cart-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center py-5">
+            <i class="fas fa-heart fa-3x mb-3"></i>
+            <h4>قائمة الأمنيات فارغة</h4>
+            <p class="mb-0">لم تقم بإضافة أي منتجات إلى قائمة الأمنيات</p>
+            <a href="/Products" class="btn btn-primary mt-3">تصفح المنتجات</a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Remove from wishlist
+        document.querySelectorAll('.remove-wishlist').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                if (confirm('هل أنت متأكد من حذف هذا المنتج من قائمة الأمنيات؟')) {
+                    try {
+                        const response = await fetch('/Wishlist/Remove', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                            },
+                            body: JSON.stringify({ itemId: this.dataset.id })
+                        });
+
+                        const result = await response.json();
+                        if (result.success) location.reload();
+                        else alert(result.message);
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('حدث خطأ أثناء حذف المنتج');
+                    }
+                }
+            });
+        });
+
+        // Add to cart from wishlist
+        document.querySelectorAll('.add-to-cart').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                try {
+                    const response = await fetch('/Cart/AddFromWishlist', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        },
+                        body: JSON.stringify({ productId: this.dataset.id })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('تمت إضافة المنتج إلى السلة بنجاح');
+                        location.reload();
+                    } else {
+                        alert(result.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('حدث خطأ أثناء إضافة المنتج إلى السلة');
+                }
+            });
+        });
+    </script>
+}

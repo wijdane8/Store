@@ -99,5 +99,7 @@ namespace Store.Models
         public virtual ICollection<ProductNotification> ProductNotifications { get; set; } = new List<ProductNotification>();
         public virtual ICollection<ProductReview> ProductReviews { get; set; } = new List<ProductReview>();
         public virtual ICollection<Wishlist> Wishlists { get; set; } = new List<Wishlist>();
+        public bool IsActive { get; set; } = true; // Default to true
+        public bool UserHasPurchased { get; set; } = false;
     }
 }

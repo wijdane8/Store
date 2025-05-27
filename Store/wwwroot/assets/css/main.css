@@ -2629,3 +2629,101 @@ section,
     margin-left: 1rem !important;
     margin-right: inherit !important;
 }
+/* Custom CSS */
+.product-gallery {
+    position: relative;
+}
+
+.main-image {
+    border: 1px solid #eee;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.thumbnail-scroller {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 10px 0;
+}
+
+.thumbnail {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+    .thumbnail:hover, .thumbnail.active {
+        border-color: #007bff;
+    }
+
+.product-info-card {
+    background: #fff;
+    position: sticky;
+    top: 20px;
+}
+
+.price-section {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.current-price {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2ecc71;
+}
+
+.original-price {
+    text-decoration: line-through;
+    color: #95a5a6;
+}
+
+.discount-badge {
+    background: #e74c3c;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.quantity-selector {
+    max-width: 200px;
+}
+
+.quantity-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.review-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Responsive Design */
+@@media (max-width: 768px) {
+    .product-info-card {
+        position: static;
+    }
+
+    .quantity-selector {
+        max-width: 100%;
+    }
+}
+.cart-count {
+    font-size: 0.7rem;
+    vertical-align: top;
+    margin-right: 3px;
+}

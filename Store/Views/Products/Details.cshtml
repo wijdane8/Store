@@ -1,11 +1,10 @@
 ﻿@model Store.Models.Product
-
+@Html.AntiForgeryToken()
 @{
     ViewData["Title"] = @Model.Name;
 }
 
 <div class="container py-5 product-details-section">
-    <!-- Improved Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/">الرئيسية</a></li>
@@ -19,46 +18,64 @@
     </nav>
 
     <div class="row gx-lg-5 gy-5">
-        <!-- Image Gallery Section -->
         <div class="col-lg-7">
-            <div class="product-gallery">
-                <div class="main-image">
+            <div id="productCarousel" class="carousel slide product-carousel-container" data-bs-ride="carousel">
+                <div class="carousel-inner rounded shadow-sm">
                     @if (Model.ProductImages != null && Model.ProductImages.Any())
                     {
-                        <img src="@Model.ProductImages.First().ImageUrl"
-                             class="img-fluid rounded-3 shadow-lg"
-                             alt="@Model.Name"
-                             data-zoom="@Model.ProductImages.First().ImageUrl">
+                        var sortedImages = Model.ProductImages
+                        .OrderByDescending(img => img.IsMain.HasValue && img.IsMain.Value)
+                        .ThenBy(img => img.Id)
+                        .ToList();
+
+                        int i = 0;
+                        foreach (var image in sortedImages)
+                        {
+                            <div class="carousel-item @(i == 0 ? "active" : "")">
+                                <img src="@image.ImageUrl" class="d-block w-100 product-carousel-image" alt="@Model.Name - Image @(i+1)">
+                            </div>
+                            i++;
+                        }
                     }
                     else
                     {
-                        <img src="https://placehold.co/600x450/EEE/31343C/FFF?text=No+Image"
-                             class="img-fluid rounded-3 shadow-lg"
-                             alt="No image available">
+                        <div class="carousel-item active">
+                            <img src="@(Model.Photo ?? "https://placehold.co/600x450/EEE/31343C/FFF?text=No+Image")"
+                                 class="d-block w-100 product-carousel-image" alt="No image available">
+                        </div>
                     }
                 </div>
-
                 @if (Model.ProductImages != null && Model.ProductImages.Count > 1)
                 {
-                    <div class="thumbnail-scroller mt-3">
-                        @foreach (var image in Model.ProductImages)
-                        {
-                            <img src="@image.ImageUrl"
-                                 class="thumbnail @(image.IsMain == true ? "active" : "")"
-                                 alt="Thumbnail"
-                                 data-main-src="@image.ImageUrl">
-                        }
-                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">السابق</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">التالي</span>
+                    </button>
                 }
             </div>
+            @if (Model.ProductImages != null && Model.ProductImages.Count > 1)
+            {
+                <div class="thumbnail-scroller mt-3 d-flex justify-content-center flex-wrap gap-2">
+                    @{
+                        int thumbIndex = 0;
+                        foreach (var image in Model.ProductImages.OrderByDescending(img => img.IsMain.HasValue && img.IsMain.Value).ThenBy(img => img.Id))
+                        {
+                            <img src="@image.ImageUrl" class="img-thumbnail thumbnail @(thumbIndex == 0 ? "active" : "")" alt="Thumbnail @(thumbIndex+1)" data-bs-target="#productCarousel" data-bs-slide-to="@thumbIndex" style="width: 80px; height: 60px; object-fit: cover; cursor: pointer;">
+                            thumbIndex++;
+                        }
+                    }
+                </div>
+            }
         </div>
 
-        <!-- Product Info Section -->
         <div class="col-lg-5">
             <div class="product-info-card shadow-sm rounded-3 p-4">
                 <h1 class="product-title mb-3">@Model.Name</h1>
 
-                <!-- Rating & Reviews -->
                 <div class="rating-section mb-4">
                     <div class="stars">
                         @for (int i = 1; i <= 5; i++)
@@ -71,7 +88,6 @@
                     </a>
                 </div>
 
-                <!-- Price Section -->
                 <div class="price-section mb-4">
                     @if (Model.OldPrice.HasValue)
                     {
@@ -87,29 +103,46 @@
                     }
                 </div>
 
-                <!-- Stock Status -->
                 <div class="stock-status alert @(Model.StockQuantity > 0 ? "alert-success" : "alert-danger") mb-4">
                     <i class="bi bi-box-seam me-2"></i>
                     @(Model.StockQuantity > 0 ? $"متوفر (آخر {Model.StockQuantity} قطع)" : "غير متوفر")
                 </div>
 
-                <!-- Add to Cart -->
                 <div class="cart-actions mb-4">
-                    <div class="quantity-selector d-flex align-items-center gap-2 mb-3">
-                        <button class="btn btn-outline-secondary quantity-btn" data-action="decrement">−</button>
-                        <input type="number"
-                               class="form-control text-center"
-                               value="1"
-                               min="1"
-                               max="@Model.StockQuantity">
-                        <button class="btn btn-outline-secondary quantity-btn" data-action="increment">+</button>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <div class="quantity-selector d-flex align-items-center gap-2 mb-3">
+                            <button class="btn btn-outline-secondary quantity-btn" data-action="decrement" type="button">−</button>
+                            <input type="number"
+                                   class="form-control text-center"
+                                   value="1"
+                                   min="1"
+                                   max="@(Model.StockQuantity.HasValue ? Model.StockQuantity.Value : 1)"
+                                   id="productQuantity">
+                            <button class="btn btn-outline-secondary quantity-btn" data-action="increment" type="button">+</button>
+                        </div>
+                        <button class="btn btn-primary btn-lg w-100 add-to-cart" id="addToCartBtn" data-product-id="@Model.Id" @(Model.StockQuantity == 0 ? "disabled" : "") type="button">
+                            <i class="bi bi-cart3 me-2"></i>أضف إلى السلة
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info text-center" role="alert">
+                            <i class="bi bi-info-circle me-2"></i> <a asp-area="Identity" asp-page="/Account/Login">سجل الدخول</a> للشراء أو لإضافة المنتج إلى المفضلة.
+                        </div>
+                    }
+
+                    <div class="d-flex justify-content-between gap-2 mt-3">
+                        <button type="button" class="btn btn-outline-secondary btn-lg flex-grow-1"
+                                id="addToWishlistBtn" data-product-id="@Model.Id">
+                            <i class="fas fa-heart"></i> أضف إلى قائمة الأمنيات
+                        </button>
+                        <button class="btn btn-outline-secondary flex-fill" type="button">
+                            <i class="bi bi-star me-2"></i>أضف إلى المفضلة
+                        </button>
                     </div>
-                    <button class="btn btn-primary btn-lg w-100 add-to-cart" @(Model.StockQuantity == 0 ? "disabled" : "")>
-                        <i class="bi bi-cart3 me-2"></i>أضف إلى السلة
-                    </button>
                 </div>
 
-                <!-- Product Meta -->
                 <div class="product-meta">
                     <div class="meta-item">
                         <span class="meta-label">السعر:</span>
@@ -128,23 +161,21 @@
         </div>
     </div>
 
-    <!-- Product Details Tabs -->
     <div class="product-tabs mt-5">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#description">الوصف</button>
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#description" type="button" role="tab" aria-controls="description" aria-selected="true">الوصف</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#specs">المواصفات</button>
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#specs" type="button" role="tab" aria-controls="specs" aria-selected="false">المواصفات</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#reviews">التقييمات (@Model.ReviewCount)</button>
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab" aria-controls="reviews" aria-selected="false">التقييمات (@Model.ReviewCount)</button>
             </li>
         </ul>
 
         <div class="tab-content mt-4">
-            <!-- Description Tab -->
-            <div class="tab-pane fade show active" id="description">
+            <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
                 <div class="product-description">
                     <h3 class="mb-4">تفاصيل المنتج</h3>
                     <div class="description-content">
@@ -153,8 +184,7 @@
                 </div>
             </div>
 
-            <!-- Specifications Tab -->
-            <div class="tab-pane fade" id="specs">
+            <div class="tab-pane fade" id="specs" role="tabpanel" aria-labelledby="specs-tab">
                 <div class="specifications-table">
                     <div class="row">
                         @if (!string.IsNullOrEmpty(Model.Sku))
@@ -164,42 +194,126 @@
                                 <span class="spec-value">@Model.Sku</span>
                             </div>
                         }
-                        <!-- Repeat for other specs -->
+                        @if (Model.Weight.HasValue)
+                        {
+                            <div class="col-md-6 spec-item">
+                                <span class="spec-label">الوزن:</span>
+                                <span class="spec-value">@Model.Weight.Value.ToString("N2") كجم</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Dimensions))
+                        {
+                            <div class="col-md-6 spec-item">
+                                <span class="spec-label">الأبعاد:</span>
+                                <span class="spec-value">@Model.Dimensions</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Color))
+                        {
+                            <div class="col-md-6 spec-item">
+                                <span class="spec-label">اللون:</span>
+                                <span class="spec-value"><span class="color-swatch" style="background-color: @Model.Color.ToLower()"></span> @Model.Color</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Material))
+                        {
+                            <div class="col-md-6 spec-item">
+                                <span class="spec-label">المادة:</span>
+                                <span class="spec-value">@Model.Material</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Warranty))
+                        {
+                            <div class="col-md-6 spec-item">
+                                <span class="spec-label">الضمان:</span>
+                                <span class="spec-value">@Model.Warranty</span>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
 
-            <!-- Reviews Tab -->
-            <div class="tab-pane fade" id="reviews">
+            <div class="tab-pane fade" id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
                 <div class="reviews-section">
                     @if (Model.ProductReviews != null && Model.ProductReviews.Any())
                     {
-                        foreach (var review in Model.ProductReviews)
+                        foreach (var review in Model.ProductReviews.OrderByDescending(r => r.ReviewDate))
                         {
-                            <div class="review-card">
-                                <div class="review-header">
-                                    <div class="review-author">@review.User?.UserName</div>
+                            <div class="review-card mb-3">
+                                <div class="review-header d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="review-title mb-0">@review.Title</h5>
                                     <div class="review-rating">
                                         @for (int i = 1; i <= 5; i++)
                                         {
-                                            <i class="bi @(i <= review.Rating ? "bi-star-fill" : "bi-star")"></i>
+                                            <i class="bi @(i <= review.Rating ? "bi-star-fill text-warning" : "bi-star text-muted")"></i>
                                         }
                                     </div>
                                 </div>
-                                <div class="review-body">
-                                    <h5 class="review-title">@review.Title</h5>
-                                    <p class="review-text">@review.Comment</p>
+                                <p class="review-text text-secondary mb-2">@review.Comment</p>
+                                <div class="review-meta d-flex justify-content-between align-items-center text-muted small">
+                                    <span class="review-author">بواسطة: @(review.User?.UserName ?? "مستخدم مجهول")</span>
+                                    <span class="review-date">@review.ReviewDate.ToString("dd MMM yyyy")</span>
                                 </div>
                             </div>
                         }
                     }
                     else
                     {
-                        <div class="no-reviews">
-                            <i class="bi bi-chat-square-text"></i>
-                            <p>لا توجد تقييمات بعد</p>
+                        <div class="no-reviews text-center py-5">
+                            <i class="bi bi-chat-square-text-fill display-4 text-muted mb-3"></i>
+                            <p class="lead text-muted">لا توجد تقييمات لهذا المنتج بعد. كن أول من يقيّم!</p>
                         </div>
                     }
+
+                    <hr class="my-5">
+
+                    <div class="post-review-form">
+                        <h4 class="mb-4 text-center">أضف تقييمك الخاص</h4>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            @* Use the Model.UserHasPurchased property populated in the controller *@
+                            @if (Model.UserHasPurchased)
+                            {
+                                <form id="reviewForm" class="p-4 border rounded bg-light shadow-sm">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productId" value="@Model.Id" />
+                                    <div class="mb-3">
+                                        <label for="reviewRating" class="form-label fw-bold">التقييم:</label>
+                                        <select class="form-select" id="reviewRating" name="rating" required>
+                                            <option value="">اختر تقييمًا</option>
+                                            <option value="5">5 نجوم - ممتاز</option>
+                                            <option value="4">4 نجوم - جيد جدًا</option>
+                                            <option value="3">3 نجوم - جيد</option>
+                                            <option value="2">2 نجوم - مقبول</option>
+                                            <option value="1">1 نجمة - سيء</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="reviewTitle" class="form-label fw-bold">العنوان:</label>
+                                        <input type="text" class="form-control" id="reviewTitle" name="title" required placeholder="عنوان موجز لتقييمك">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="reviewComment" class="form-label fw-bold">التعليق:</label>
+                                        <textarea class="form-control" id="reviewComment" name="comment" rows="4" required placeholder="اكتب تفاصيل تقييمك هنا..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-lg w-100">إرسال التقييم</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info text-center">
+                                    <i class="bi bi-info-circle-fill me-2"></i> يجب عليك شراء هذا المنتج قبل أن تتمكن من تقييمه.
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-center mt-5 text-muted py-3 border rounded bg-light">
+                                <i class="bi bi-person-fill me-2"></i>
+                                <a asp-area="Identity" asp-page="/Account/Login" class="link-primary fw-bold">سجل الدخول</a> لإضافة تقييم.
+                            </p>
+                        }
+                    </div>
                 </div>
             </div>
         </div>
@@ -300,40 +414,338 @@
             max-width: 100%;
         }
     }
+
+    /* Additional CSS from main.css related to color-mix for illustrative purposes */
+    /* You should ensure these are handled in your main.css or similar global stylesheet */
+    .form-select:focus,
+    .form-control:focus {
+        border-color: var(--accent-color);
+        /* Fallback for color-mix if not supported */
+        /* box-shadow: 0 0 0 3px rgba(88, 70, 249, 0.2);  */ /* Example fallback for accent-color with 20% transparency */
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-color), transparent 80%);
+    }
+
+    /* Example: how you might convert color-mix if not supported globally */
+    /*
+            .some-element {
+                background-color: #f0f8ff; // Fallback
+                background-color: color-mix(in srgb, var(--accent-color), black 10%);
+            }
+            */
 </style>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Thumbnail interaction
-            document.querySelectorAll('.thumbnail').forEach(thumb => {
-                thumb.addEventListener('click', function() {
-                    document.querySelector('.thumbnail.active').classList.remove('active');
-                    this.classList.add('active');
-                    document.querySelector('.main-image img').src = this.dataset.mainSrc;
+        document.addEventListener("DOMContentLoaded", function () {
+            // Initialize AOS if available
+            if (typeof AOS !== 'undefined') {
+                AOS.init({
+                    duration: 800,
+                    easing: "ease-in-out",
+                    once: true,
                 });
-            });
+            } else {
+                console.warn('AOS library not found. Skipping AOS initialization.');
+            }
 
-            // Quantity selector
-            document.querySelectorAll('.quantity-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const input = this.parentElement.querySelector('input');
-                    const currentVal = parseInt(input.value);
-                    const action = this.dataset.action;
+            // --- Bootstrap Carousel Thumbnail Interaction ---
+            const productCarouselElement = document.getElementById('productCarousel');
+            if (productCarouselElement) {
+                // Initialize Bootstrap Carousel if not already done
+                // Use `new bootstrap.Carousel(element)` to get an instance
+                const carouselInstance = bootstrap.Carousel.getInstance(productCarouselElement) || new bootstrap.Carousel(productCarouselElement);
 
-                    if(action === 'increment') {
-                        input.value = currentVal + 1;
-                    } else {
-                        if(currentVal > 1) input.value = currentVal - 1;
+                // Add click listener to thumbnails to slide the carousel
+                document.querySelectorAll('.thumbnail-scroller .thumbnail').forEach(thumb => {
+                    thumb.addEventListener('click', function () {
+                        const slideTo = parseInt(this.dataset.bsSlideTo); // Get the slide index
+                        carouselInstance.to(slideTo); // Tell Bootstrap carousel to go to that slide
+                    });
+                });
+
+                // Listen for carousel slide event to update active thumbnail
+                productCarouselElement.addEventListener('slid.bs.carousel', function (event) {
+                    const activeIndex = event.to; // Index of the newly active slide
+                    document.querySelectorAll('.thumbnail-scroller .thumbnail').forEach((thumb, index) => {
+                        if (index === activeIndex) {
+                            thumb.classList.add('active');
+                        } else {
+                            thumb.classList.remove('active');
+                        }
+                    });
+                });
+
+                // Set initial active thumbnail (for page load)
+                // This ensures the first thumbnail is active when the page loads
+                const initialActiveThumbnail = document.querySelector('.thumbnail-scroller .thumbnail[data-bs-slide-to="0"]');
+                if (initialActiveThumbnail) {
+                    initialActiveThumbnail.classList.add('active');
+                }
+            } else {
+                console.warn('Product carousel element not found. Thumbnail interaction may not work as expected.');
+            }
+
+            // --- Quantity selector ---
+            // Only attach event listeners if quantity selector is present (i.e., user is logged in)
+            const quantitySelector = document.querySelector('.quantity-selector');
+            if (quantitySelector) {
+                document.querySelectorAll('.quantity-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        // Use closest() to find the parent quantity-selector and then its input
+                        const input = this.closest('.quantity-selector').querySelector('input[type="number"]');
+                        if (!input) {
+                            console.error('Quantity input not found for button:', this);
+                            return;
+                        }
+
+                        let currentVal = parseInt(input.value) || 1; // Default to 1 if parsing fails or value is empty
+                        const action = this.dataset.action;
+                        // Ensure maxQuantity is parsed as a number, defaulting to a large number if not set
+                        const maxQuantity = parseInt(input.max) || 999;
+
+                        if (action === 'increment') {
+                            input.value = Math.min(currentVal + 1, maxQuantity);
+                        } else { // decrement
+                            input.value = Math.max(currentVal - 1, 1); // Ensure minimum is 1
+                        }
+                    });
+                });
+            }
+
+
+            // --- Add to Cart functionality ---
+            const addToCartBtn = document.getElementById('addToCartBtn');
+            if (addToCartBtn) { // Only attach if the button exists (user is logged in)
+                addToCartBtn.addEventListener('click', async function () {
+                    const productId = this.dataset.productId;
+                    if (!productId) {
+                        console.error('Product ID not found on add-to-cart button (data-product-id attribute missing).');
+                        Swal.fire({ icon: 'error', title: 'Error!', text: 'Product ID is missing. Cannot add to cart.' });
+                        return;
+                    }
+
+                    const quantityInput = document.getElementById('productQuantity');
+                    const quantity = parseInt(quantityInput?.value) || 1;
+
+                    try {
+                        const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]');
+                        if (!antiForgeryToken || !antiForgeryToken.value) { // Check if value exists too
+                            console.error("CSRF token not found or empty.");
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Security Error!',
+                                text: 'Verification token missing. Please refresh the page.',
+                                showConfirmButton: true
+                            });
+                            return;
+                        }
+
+                        const response = await fetch('/Products/AddToCart', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': antiForgeryToken.value
+                            },
+                            body: JSON.stringify({
+                                productId: parseInt(productId),
+                                quantity: quantity
+                            })
+                        });
+                                if (result.success) {
+            await updateCartCount(); // Update the counter
+            Swal.fire({ ... });
+        }
+                        // Improved error handling: attempt to read JSON message from server
+                        if (!response.ok) {
+                            const errorData = await response.json(); // Assuming controller always returns JSON for errors
+                            let errorMessage = errorData.message || `HTTP error! status: ${response.status}`;
+                            throw new Error(errorMessage);
+                        }
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Added to Cart!',
+                                text: result.message,
+                                showConfirmButton: false,
+                                timer: 1500
+                            }).then(() => {
+                                // Consider a more robust cart update (e.g., fetching new cart count via AJAX)
+                                // rather than full page reload if only a small part of UI changes.
+                                location.reload(); // Reload to update cart count and stock status
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: result.message,
+                                showConfirmButton: true
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error adding to cart:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Connection/Server Error!',
+                            text: `An error occurred while adding the product: ${error.message || 'Please try again later.'}`,
+                            showConfirmButton: true
+                        });
                     }
                 });
-            });
+            } else {
+                console.warn('Add to Cart button not found (expected when user is not logged in).');
+            }
 
-            // Image zoom
-            const mainImage = document.querySelector('.main-image img');
-            mainImage.addEventListener('mousemove', (e) => {
-                // Implement zoom logic here
+                     // --- Add to Wishlist Button Handler ---
+        const addToWishlistBtn = document.getElementById('addToWishlistBtn');
+        if (addToWishlistBtn) {
+            addToWishlistBtn.addEventListener('click', async function() {
+                const productId = this.dataset.productId;
+                if (!productId) {
+                    console.error('Product ID not found');
+                    return;
+                }
+
+                const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                if (!antiForgeryToken) {
+                    console.error('Anti-forgery token not found');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/Products/AddToWishlist', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': antiForgeryToken
+                        },
+                        body: JSON.stringify({
+                            productId: parseInt(productId)
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'نجاح!',
+                            text: data.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        // Update button state
+                        this.disabled = true;
+                        this.innerHTML = '<i class="fas fa-heart"></i> تم الإضافة إلى المفضلة';
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'خطأ!',
+                            text: data.message
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error adding to wishlist:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'خطأ!',
+                        text: 'حدث خطأ أثناء إضافة المنتج إلى قائمة الأمنيات.'
+                    });
+                }
             });
+        }
+
+
+            // --- Review Form submission ---
+            const reviewForm = document.getElementById('reviewForm');
+            if (reviewForm) {
+                reviewForm.addEventListener('submit', async function (event) {
+                    event.preventDefault();
+
+                    // Using FormData to easily get all form values
+                    const formData = new FormData(this);
+                    const productId = formData.get('productId');
+                    const rating = parseInt(formData.get('rating'));
+                    const title = formData.get('title');
+                    const comment = formData.get('comment');
+
+                    if (!productId || isNaN(rating) || !title || !comment) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error!',
+                            text: 'Please fill all required fields correctly (Rating, Title, Comment).',
+                            showConfirmButton: true
+                        });
+                        return;
+                    }
+
+                    try {
+                        // Ensure the anti-forgery token is correctly picked from the form
+                        const antiForgeryTokenInput = this.querySelector('input[name="__RequestVerificationToken"]');
+                        if (!antiForgeryTokenInput || !antiForgeryTokenInput.value) { // Check if value exists too
+                            console.error("CSRF token not found for review form.");
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Security Error!',
+                                text: 'Verification token missing. Please refresh the page.',
+                                showConfirmButton: true
+                            });
+                            return;
+                        }
+
+                        const response = await fetch('/Products/SubmitReview', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                                'RequestVerificationToken': antiForgeryTokenInput.value // Use the value directly
+                            },
+                            body: new URLSearchParams(formData).toString() // Directly use formData with URLSearchParams
+                        });
+
+                        // Improved error handling for server responses
+                        if (!response.ok) {
+                            const errorData = await response.json(); // Assuming controller always returns JSON for errors
+                            let errorMessage = errorData.message || `HTTP error! status: ${response.status}`;
+                            throw new Error(errorMessage);
+                        }
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Thank You!',
+                                text: result.message,
+                                showConfirmButton: false,
+                                timer: 1500
+                            }).then(() => {
+                                location.reload(); // Reload to show the new review
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: result.message,
+                                showConfirmButton: true
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error submitting review:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Connection/Server Error!',
+                            text: `An error occurred while submitting your review: ${error.message || 'Please try again later.'}`,
+                            showConfirmButton: true
+                        });
+                    }
+                });
+            }
         });
     </script>
 }

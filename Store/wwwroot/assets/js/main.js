@@ -192,7 +192,22 @@
       }
     }
   });
+    //refresh  cart
+    async function updateCartCount() {
+        try {
+            const response = await fetch('/Cart/GetCount');
+            if (!response.ok) throw new Error('Network error');
+            const data = await response.json();
+            document.querySelectorAll('.cart-count').forEach(el => {
+                el.textContent = data.count;
+            });
+        } catch (error) {
+            console.error('Failed to update cart count:', error);
+        }
+    }
 
+    // Initialize cart count when page loads
+    document.addEventListener('DOMContentLoaded', updateCartCount);
   /**
    * Navmenu Scrollspy
    */

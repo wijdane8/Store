@@ -90,6 +90,21 @@
                             <span class="user-greeting">مرحباً!</span>
                         }
                     </div>
+                    <ul>
+                        <li class="nav-item">
+                            <a href="/Cart" class="nav-link">
+                                <i class="fas fa-shopping-cart"></i>
+                                سلة التسوق
+                                <span class="badge bg-primary cart-count">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Wishlist">
+                                <i class="fas fa-heart"></i> قائمة الأمنيات
+                            </a>
+                        </li>
+                    </ul>
+
                     <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
                         <button type="submit" class="btn btn-logout" title="تسجيل الخروج">
                             <i class="bi bi-box-arrow-left fs-5 orange-icon" aria-label="تسجيل الخروج"></i>

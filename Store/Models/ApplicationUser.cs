@@ -13,6 +13,7 @@ namespace Store.Models
         public ICollection<ProductReview> ProductReviews { get; set; } = new List<ProductReview>();
         public ICollection<Wishlist> Wishlists { get; set; } = new List<Wishlist>();
         public ICollection<Cart> Carts { get; set; } = new List<Cart>(); // إذا كنت تريد علاقة مباشرة من User إلى Cart
-        // ********************************************************************************
+       
+        public ICollection<Order>? Orders { get; set; } // If you map this
     }
 }

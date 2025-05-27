@@ -5,7 +5,7 @@
 namespace Store.Migrations
 {
     /// <inheritdoc />
-    public partial class FreshDatabaseInit : Migration
+    public partial class AddWishlistTable : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

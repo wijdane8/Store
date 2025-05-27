@@ -1,0 +1,156 @@
+﻿@model CartViewModel
+@{
+    ViewData["Title"] = "سلة التسوق";
+}
+
+<div class="container py-5">
+    <h1 class="mb-4">سلة التسوق</h1>
+
+    @if (Model.CartItems.Any())
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        @foreach (var item in Model.CartItems)
+                        {
+                            <div class="row align-items-center mb-4">
+                                <div class="col-md-2">
+                                    <img src="@(item.Product.ProductImages.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png")"
+                                         class="img-fluid rounded" alt="@item.Product.Name">
+                                </div>
+                                <div class="col-md-4">
+                                    <h5>@item.Product.Name</h5>
+                                    <p class="text-muted">@item.Product.ShortDescription</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <button class="btn btn-outline-secondary update-quantity"
+                                                data-action="decrease" data-id="@item.Id">
+                                            -
+                                        </button>
+                                        <input type="number" class="form-control text-center quantity-input"
+                                               value="@item.Quantity" min="1" max="50" data-id="@item.Id">
+                                        <button class="btn btn-outline-secondary update-quantity"
+                                                data-action="increase" data-id="@item.Id">
+                                            +
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <span class="fw-bold">@((item.Price * item.Quantity).ToString("N2")) ر.س</span>
+                                </div>
+                                <div class="col-md-1">
+                                    <button class="btn btn-danger remove-item" data-id="@item.Id">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">ملخص الطلب</h5>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>عدد المنتجات:</span>
+                            <span>@Model.TotalItems</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>المجموع:</span>
+                            <span class="fw-bold">@Model.TotalPrice.ToString("N2") ر.س</span>
+                        </div>
+                        <a href="/Checkout" class="btn btn-primary w-100 py-2">إتمام الشراء</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center py-5">
+            <i class="fas fa-shopping-cart fa-3x mb-3"></i>
+            <h4>سلة التسوق فارغة</h4>
+            <p class="mb-0">لا توجد منتجات في سلة التسوق الخاصة بك</p>
+            <a href="/Products" class="btn btn-primary mt-3">تصفح المنتجات</a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Quantity update logic
+        document.querySelectorAll('.update-quantity').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const action = this.dataset.action;
+                const itemId = this.dataset.id;
+                const input = document.querySelector(`.quantity-input[data-id="${itemId}"]`);
+
+                let newQty = parseInt(input.value);
+                if (action === 'increase') newQty++;
+                else if (action === 'decrease' && newQty > 1) newQty--;
+
+                await updateCartItem(itemId, newQty);
+            });
+        });
+
+        // Remove item logic
+        document.querySelectorAll('.remove-item').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                if (confirm('هل أنت متأكد من حذف هذا المنتج من السلة؟')) {
+                    await removeCartItem(this.dataset.id);
+                    location.reload();
+                }
+            });
+        });
+
+        async function updateCartItem(itemId, quantity) {
+            try {
+                const response = await fetch('/Cart/UpdateItem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ itemId, quantity })
+                });
+
+                const result = await response.json();
+                if (result.success) location.reload();
+                else alert(result.message);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء تحديث الكمية');
+            }
+        }
+                async function removeCartItem(itemId) {
+            const response = await fetch('/Cart/RemoveItem', { ... });
+            const result = await response.json();
+            if (result.success) {
+                await updateCartCount(); // Update counter
+                location.reload();
+            }
+        }
+        async function removeCartItem(itemId) {
+            try {
+                const response = await fetch('/Cart/RemoveItem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ itemId })
+                });
+
+                const result = await response.json();
+                if (!result.success) alert(result.message);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء حذف المنتج');
+            }
+        }
+    </script>
+}

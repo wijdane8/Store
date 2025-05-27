@@ -1,11 +1,12 @@
-﻿// File: Store/Controllers/ProductsController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Store.Models;
+using Store.Models; // Ensure this points to your models namespace
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using System.Security.Claims;
-using System.Linq; // لـ Any() و Average()
+using System.Security.Claims; // Required for User.FindFirstValue
+using System.Linq; // Required for .Any(), .Average(), .Sum()
+using System; // Required for DateTime.UtcNow
+using System.Threading.Tasks; // Required for async/await
 
 namespace Store.Controllers
 {
@@ -20,20 +21,17 @@ namespace Store.Controllers
             _userManager = userManager;
         }
 
-        // GET: /Products
-
         public async Task<IActionResult> Index()
         {
             var products = await _context.Products
-                                         .Include(p => p.ProductImages) // Eager load ProductImages
-                                         .Include(p => p.Cat) // Assuming you also want to load the Category name
-                                         .ToListAsync();
+                .Include(p => p.ProductImages)
+                .Include(p => p.Cat)
+                .Where(p => p.IsActive) // Only active products
+                .ToListAsync();
             return View(products);
         }
 
-        // GET: /Products/Details/5
-
-        public async Task<IActionResult> Details(int? id) // 'id' should be nullable if not guaranteed
+        public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
             {
@@ -41,66 +39,98 @@ namespace Store.Controllers
             }
 
             var product = await _context.Products
-                                        .Include(p => p.ProductImages) // Eager load product images
-                                        .Include(p => p.Cat)           // Eager load category
-                                        .Include(p => p.ProductReviews) // Eager load product reviews
-                                        .FirstOrDefaultAsync(m => m.Id == id);
+                .Include(p => p.ProductImages)
+                .Include(p => p.Cat)
+                .Include(p => p.ProductReviews)
+                    .ThenInclude(pr => pr.User) // Include the User navigating from ProductReview
+                .FirstOrDefaultAsync(m => m.Id == id && m.IsActive); // Only active products
 
             if (product == null)
             {
                 return NotFound();
             }
 
+            // Calculate ratings and review count
+            product.AverageRating = product.ProductReviews?.Any() == true ?
+                product.ProductReviews.Average(r => r.Rating) : 0;
+            product.ReviewCount = product.ProductReviews?.Count ?? 0;
+
+            // Determine if the current user has purchased this product for review eligibility
+            if (User.Identity.IsAuthenticated)
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                // هذا المنطق يتحقق من المنتجات التي تم شراؤها فعليًا (الطلبات المكتملة)
+                product.UserHasPurchased = await _context.OrderItems
+                    .Include(oi => oi.Order) // Include the Order navigation property
+                    .AnyAsync(oi => oi.ProductId == id &&
+                                    oi.Order.UserId == userId &&
+                                    oi.Order.Status == OrderStatus.Completed); // التحقق من حالة الطلب المكتملة
+            }
+            else
+            {
+                product.UserHasPurchased = false;
+            }
+
             return View(product);
         }
 
-        // POST: Products/AddToCart
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddToCart([FromBody] AddToCartRequest request)
         {
-            // تأكد من أن المستخدم مسجل الدخول قبل محاولة الوصول إلى User.Identity
-            if (!User.Identity?.IsAuthenticated ?? false)
+            if (!User.Identity?.IsAuthenticated == true)
             {
-                return Json(new { success = false, message = "يجب تسجيل الدخول أولاً لإضافة منتجات إلى السلة." });
+                return Json(new { success = false, message = "الرجاء تسجيل الدخول لإضافة المنتجات إلى السلة." });
             }
 
             var product = await _context.Products.FindAsync(request.ProductId);
-            if (product == null)
+            if (product == null || !product.IsActive)
             {
-                return Json(new { success = false, message = "المنتج المحدد غير موجود." });
+                return Json(new { success = false, message = "المنتج غير موجود أو غير متاح." });
             }
 
-            // *** استخدام StockQuantity و التعامل مع Nullability ***
             if (!product.StockQuantity.HasValue || product.StockQuantity.Value < request.Quantity)
             {
-                return Json(new { success = false, message = $"الكمية المطلوبة ({request.Quantity}) غير متوفرة في المخزون. المتوفر: {(product.StockQuantity.HasValue ? product.StockQuantity.Value : 0)}" });
+                return Json(new
+                {
+                    success = false,
+                    message = $"الكمية المطلوبة ({request.Quantity}) غير متوفرة. الكمية المتاحة: {product.StockQuantity ?? 0}"
+                });
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
             {
-                return Json(new { success = false, message = "لم يتم تحديد هوية المستخدم." });
+                return Json(new { success = false, message = "فشل تحديد هوية المستخدم." });
             }
 
+            // FIX: البحث عن سلة التسوق النشطة فقط للمستخدم الحالي
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
-                .FirstOrDefaultAsync(c => c.UserId == userId);
+                .FirstOrDefaultAsync(c => c.UserId == userId && c.Status == CartStatus.Active); // <-- تم التعديل هنا
 
             if (cart == null)
             {
-                cart = new Cart { UserId = userId };
+                // إذا لم يتم العثور على سلة تسوق نشطة، قم بإنشاء واحدة جديدة
+                cart = new Cart { UserId = userId, Status = CartStatus.Active };
                 _context.Carts.Add(cart);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(); // احفظ التغييرات للحصول على Cart.Id
             }
+            // لا حاجة لـ 'else if (cart.Status != CartStatus.Active)' هنا
+            // لأن الاستعلام يضمن أننا نحصل على سلة نشطة فقط.
+            // إذا لم يتم العثور على سلة نشطة، يتم إنشاء واحدة جديدة.
 
             var cartItem = cart.CartItems.FirstOrDefault(i => i.ProductId == request.ProductId);
             if (cartItem != null)
             {
-                // التأكد من عدم تجاوز المخزون عند إضافة كمية إضافية
-                if (product.StockQuantity.HasValue && (cartItem.Quantity + request.Quantity) > product.StockQuantity.Value)
+                if (product.StockQuantity.HasValue &&
+                    (cartItem.Quantity + request.Quantity) > product.StockQuantity.Value)
                 {
-                    return Json(new { success = false, message = $"لا يمكنك إضافة المزيد من هذا المنتج. الكمية الإجمالية ({cartItem.Quantity + request.Quantity}) ستتجاوز المخزون المتوفر ({product.StockQuantity.Value})." });
+                    return Json(new
+                    {
+                        success = false,
+                        message = $"لا يمكن إضافة المزيد. إجمالي الكمية ({cartItem.Quantity + request.Quantity}) سيتجاوز المخزون المتاح ({product.StockQuantity.Value})."
+                    });
                 }
                 cartItem.Quantity += request.Quantity;
             }
@@ -110,62 +140,68 @@ namespace Store.Controllers
                 {
                     ProductId = request.ProductId,
                     Quantity = request.Quantity,
-                    Price = product.Price, // Price هو decimal الآن، لا حاجة لـ .Value
+                    Price = product.Price,
                     CartId = cart.Id
                 };
-                _context.CartItems.Add(cartItem);
+                cart.CartItems.Add(cartItem);
             }
 
-            // تحديث المخزون بعد الإضافة
-            if (product.StockQuantity.HasValue)
+            await _context.SaveChangesAsync(); // احفظ التغييرات على السلة وعناصر السلة فقط
+
+            return Json(new
             {
-                product.StockQuantity -= request.Quantity;
-            }
-
-            await _context.SaveChangesAsync();
-            return Json(new { success = true, message = "تمت إضافة المنتج إلى السلة بنجاح!" });
+                success = true,
+                message = "تمت إضافة المنتج إلى السلة بنجاح!",
+                cartItemCount = cart.CartItems.Sum(i => i.Quantity)
+            });
         }
 
-        // POST: Products/AddToWishlist
         [HttpPost]
         [Authorize]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddToWishlist(int productId)
+        public async Task<IActionResult> AddToWishlist([FromBody] AddToWishlistRequest request)
         {
-            var product = await _context.Products.FindAsync(productId);
-            if (product == null)
+            if (!ModelState.IsValid)
             {
-                return Json(new { success = false, message = "المنتج غير موجود" });
+                return Json(new { success = false, message = "بيانات غير صالحة." });
+            }
+
+            var product = await _context.Products.FindAsync(request.ProductId);
+            if (product == null || !product.IsActive)
+            {
+                return Json(new { success = false, message = "المنتج غير موجود أو غير متاح." });
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
             {
-                return Json(new { success = false, message = "لم يتم تحديد هوية المستخدم." });
+                return Json(new { success = false, message = "فشل تحديد هوية المستخدم." });
             }
 
             var existingWishlistItem = await _context.Wishlists
-                .FirstOrDefaultAsync(w => w.UserId == userId && w.ProductId == productId);
+                .FirstOrDefaultAsync(w => w.UserId == userId && w.ProductId == request.ProductId);
 
             if (existingWishlistItem != null)
             {
-                return Json(new { success = false, message = "المنتج موجود بالفعل في المفضلة" });
+                return Json(new { success = false, message = "المنتج موجود بالفعل في قائمة الرغبات." });
             }
 
-            var wishlistItem = new Wishlist
+            _context.Wishlists.Add(new Wishlist
             {
                 UserId = userId,
-                ProductId = productId,
-                AddedDate = DateTime.Now
-            };
+                ProductId = request.ProductId,
+                AddedDate = DateTime.UtcNow
+            });
 
-            _context.Wishlists.Add(wishlistItem);
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true, message = "تمت إضافة المنتج إلى المفضلة" });
+            return Json(new { success = true, message = "تمت إضافة المنتج إلى قائمة الرغبات." });
         }
 
-        // POST: Products/RemoveFromWishlist
+        public class AddToWishlistRequest
+        {
+            public int ProductId { get; set; }
+        }
+
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
@@ -174,7 +210,7 @@ namespace Store.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
             {
-                return Json(new { success = false, message = "لم يتم تحديد هوية المستخدم." });
+                return Json(new { success = false, message = "فشل تحديد هوية المستخدم." });
             }
 
             var wishlistItem = await _context.Wishlists
@@ -182,122 +218,94 @@ namespace Store.Controllers
 
             if (wishlistItem == null)
             {
-                return Json(new { success = false, message = "المنتج غير موجود في المفضلة" });
+                return Json(new { success = false, message = "المنتج غير موجود في قائمة الرغبات." });
             }
 
             _context.Wishlists.Remove(wishlistItem);
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true, message = "تمت إزالة المنتج من المفضلة" });
+            return Json(new { success = true, message = "تمت إزالة المنتج من قائمة الرغبات." });
         }
 
-        // POST: Products/SubmitReview
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitReview(int productId, int rating, string title, string comment)
         {
+            // Existing validation checks
             if (rating < 1 || rating > 5)
             {
-                return Json(new { success = false, message = "التقييم يجب أن يكون بين 1 و 5" });
+                return Json(new { success = false, message = "يجب أن يكون التقييم بين 1 و 5." });
             }
 
             if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(comment))
             {
-                return Json(new { success = false, message = "الرجاء إدخال عنوان و تعليق للتقييم" });
+                return Json(new { success = false, message = "الرجاء تقديم العنوان والتعليق." });
             }
 
             var product = await _context.Products.FindAsync(productId);
-            if (product == null)
+            if (product == null || !product.IsActive)
             {
-                return Json(new { success = false, message = "المنتج غير موجود" });
+                return Json(new { success = false, message = "المنتج غير موجود أو غير متاح." });
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
             {
-                return Json(new { success = false, message = "لم يتم تحديد هوية المستخدم." });
+                return Json(new { success = false, message = "فشل تحديد هوية المستخدم." });
             }
 
-            var review = new ProductReview
+            // التحقق مما إذا كان المستخدم قد اشترى هذا المنتج (باستخدام OrderItems و OrderStatus.Completed)
+            var hasPurchased = await _context.OrderItems
+                .Include(oi => oi.Order)
+                .AnyAsync(oi => oi.ProductId == productId &&
+                                oi.Order.UserId == userId &&
+                                oi.Order.Status == OrderStatus.Completed);
+
+            if (!hasPurchased)
+            {
+                return Json(new { success = false, message = "يجب عليك شراء هذا المنتج قبل تقديم تقييم." });
+            }
+
+            var existingReview = await _context.ProductReviews
+                .FirstOrDefaultAsync(r => r.ProductId == productId && r.UserId == userId);
+
+            if (existingReview != null)
+            {
+                return Json(new { success = false, message = "لقد قمت بتقييم هذا المنتج بالفعل." });
+            }
+
+            _context.ProductReviews.Add(new ProductReview
             {
                 ProductId = productId,
                 UserId = userId,
                 Rating = rating,
                 Title = title,
                 Comment = comment,
-                ReviewDate = DateTime.Now
-            };
+                ReviewDate = DateTime.UtcNow
+            });
 
-            _context.ProductReviews.Add(review);
             await _context.SaveChangesAsync();
 
-            // *** تحديث متوسط التقييم وعدد التقييمات ***
-            var productReviews = await _context.ProductReviews.Where(pr => pr.ProductId == productId).ToListAsync();
-            product.AverageRating = productReviews.Any() ? productReviews.Average(pr => pr.Rating) : 0.0;
-            product.ReviewCount = productReviews.Count;
-            await _context.SaveChangesAsync(); // حفظ التغييرات على المنتج
+            var updatedProduct = await _context.Products
+                .Include(p => p.ProductReviews)
+                .FirstOrDefaultAsync(p => p.Id == productId);
 
-            return Json(new { success = true, message = "شكراً لتقييمك للمنتج" });
-        }
-
-        // POST: Products/NotifyMeWhenAvailable
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> NotifyMeWhenAvailable(int productId, string email)
-        {
-            var product = await _context.Products.FindAsync(productId);
-            if (product == null)
+            if (updatedProduct != null)
             {
-                return Json(new { success = false, message = "المنتج غير موجود" });
+                updatedProduct.AverageRating = updatedProduct.ProductReviews?.Any() == true ?
+                                                updatedProduct.ProductReviews.Average(r => r.Rating) : 0;
+                updatedProduct.ReviewCount = updatedProduct.ProductReviews?.Count ?? 0;
+                await _context.SaveChangesAsync();
             }
 
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                return Json(new { success = false, message = "الرجاء إدخال بريد إلكتروني صحيح" });
-            }
-
-            var existingNotification = await _context.ProductNotifications
-                .FirstOrDefaultAsync(n => n.ProductId == productId && n.Email == email);
-
-            if (existingNotification != null)
-            {
-                return Json(new { success = false, message = "لقد قمت بالفعل بالتسجيل للإشعار لهذا المنتج" });
-            }
-
-            var notification = new ProductNotification
-            {
-                ProductId = productId,
-                Email = email,
-                NotificationDate = DateTime.Now,
-                IsNotified = false
-            };
-
-            _context.ProductNotifications.Add(notification);
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "سيتم إعلامك عندما يتوفر المنتج" });
+            return Json(new { success = true, message = "تم إرسال التقييم بنجاح!" });
         }
 
-        // POST: Products/AddToCompare
-        [HttpPost]
-        public IActionResult AddToCompare(int productId)
+        public class AddToCartRequest
         {
-            return Json(new { success = true, message = "تمت إضافة المنتج للمقارنة (تتطلب منطقًا إضافيًا)." });
+            public int ProductId { get; set; }
+            public int Quantity { get; set; }
         }
-
-        // POST: Products/NotifyProductAvailability (مكرر مع NotifyMeWhenAvailable، يمكن حذف أحدهما إذا كانا يؤديان نفس الغرض)
-        [HttpPost]
-        public IActionResult NotifyProductAvailability(int productId)
-        {
-            return Json(new { success = true, message = "طلب إشعار التوفر قيد المعالجة (تتطلب منطقًا إضافيًا)." });
-        }
-    }
-
-    // كلاس داخلي لنموذج الطلب لـ AddToCart - يجب أن يكون هنا أو في ملف منفصل (عادة في مجلد ViewModels)
-    public class AddToCartRequest
-    {
-        public int ProductId { get; set; }
-        public int Quantity { get; set; }
     }
 }
