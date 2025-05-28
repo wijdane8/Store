@@ -82,7 +82,6 @@
 
 @section Scripts {
     <script>
-        // Quantity update logic
         document.querySelectorAll('.update-quantity').forEach(btn => {
             btn.addEventListener('click', async function() {
                 const action = this.dataset.action;
@@ -97,7 +96,6 @@
             });
         });
 
-        // Remove item logic
         document.querySelectorAll('.remove-item').forEach(btn => {
             btn.addEventListener('click', async function() {
                 if (confirm('هل أنت متأكد من حذف هذا المنتج من السلة؟')) {
@@ -130,7 +128,7 @@
             const response = await fetch('/Cart/RemoveItem', { ... });
             const result = await response.json();
             if (result.success) {
-                await updateCartCount(); // Update counter
+                await updateCartCount(); 
                 location.reload();
             }
         }

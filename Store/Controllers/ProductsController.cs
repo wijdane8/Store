@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Store.Models; // Ensure this points to your models namespace
+using Store.Models; 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using System.Security.Claims; // Required for User.FindFirstValue
-using System.Linq; // Required for .Any(), .Average(), .Sum()
-using System; // Required for DateTime.UtcNow
-using System.Threading.Tasks; // Required for async/await
+using System.Security.Claims;
+using System.Linq; 
+using System; 
+using System.Threading.Tasks; 
 
 namespace Store.Controllers
 {
@@ -26,7 +26,7 @@ namespace Store.Controllers
             var products = await _context.Products
                 .Include(p => p.ProductImages)
                 .Include(p => p.Cat)
-                .Where(p => p.IsActive) // Only active products
+                .Where(p => p.IsActive) 
                 .ToListAsync();
             return View(products);
         }
@@ -42,29 +42,26 @@ namespace Store.Controllers
                 .Include(p => p.ProductImages)
                 .Include(p => p.Cat)
                 .Include(p => p.ProductReviews)
-                    .ThenInclude(pr => pr.User) // Include the User navigating from ProductReview
-                .FirstOrDefaultAsync(m => m.Id == id && m.IsActive); // Only active products
+                    .ThenInclude(pr => pr.User) 
+                .FirstOrDefaultAsync(m => m.Id == id && m.IsActive);
 
             if (product == null)
             {
                 return NotFound();
             }
 
-            // Calculate ratings and review count
             product.AverageRating = product.ProductReviews?.Any() == true ?
                 product.ProductReviews.Average(r => r.Rating) : 0;
             product.ReviewCount = product.ProductReviews?.Count ?? 0;
 
-            // Determine if the current user has purchased this product for review eligibility
             if (User.Identity.IsAuthenticated)
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                // هذا المنطق يتحقق من المنتجات التي تم شراؤها فعليًا (الطلبات المكتملة)
                 product.UserHasPurchased = await _context.OrderItems
-                    .Include(oi => oi.Order) // Include the Order navigation property
+                    .Include(oi => oi.Order)
                     .AnyAsync(oi => oi.ProductId == id &&
                                     oi.Order.UserId == userId &&
-                                    oi.Order.Status == OrderStatus.Completed); // التحقق من حالة الطلب المكتملة
+                                    oi.Order.Status == OrderStatus.Completed); 
             }
             else
             {
@@ -104,21 +101,16 @@ namespace Store.Controllers
                 return Json(new { success = false, message = "فشل تحديد هوية المستخدم." });
             }
 
-            // FIX: البحث عن سلة التسوق النشطة فقط للمستخدم الحالي
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
-                .FirstOrDefaultAsync(c => c.UserId == userId && c.Status == CartStatus.Active); // <-- تم التعديل هنا
+                .FirstOrDefaultAsync(c => c.UserId == userId && c.Status == CartStatus.Active); 
 
             if (cart == null)
             {
-                // إذا لم يتم العثور على سلة تسوق نشطة، قم بإنشاء واحدة جديدة
                 cart = new Cart { UserId = userId, Status = CartStatus.Active };
                 _context.Carts.Add(cart);
-                await _context.SaveChangesAsync(); // احفظ التغييرات للحصول على Cart.Id
+                await _context.SaveChangesAsync(); 
             }
-            // لا حاجة لـ 'else if (cart.Status != CartStatus.Active)' هنا
-            // لأن الاستعلام يضمن أننا نحصل على سلة نشطة فقط.
-            // إذا لم يتم العثور على سلة نشطة، يتم إنشاء واحدة جديدة.
 
             var cartItem = cart.CartItems.FirstOrDefault(i => i.ProductId == request.ProductId);
             if (cartItem != null)
@@ -146,7 +138,7 @@ namespace Store.Controllers
                 cart.CartItems.Add(cartItem);
             }
 
-            await _context.SaveChangesAsync(); // احفظ التغييرات على السلة وعناصر السلة فقط
+            await _context.SaveChangesAsync(); 
 
             return Json(new
             {
@@ -232,7 +224,6 @@ namespace Store.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitReview(int productId, int rating, string title, string comment)
         {
-            // Existing validation checks
             if (rating < 1 || rating > 5)
             {
                 return Json(new { success = false, message = "يجب أن يكون التقييم بين 1 و 5." });
@@ -254,8 +245,6 @@ namespace Store.Controllers
             {
                 return Json(new { success = false, message = "فشل تحديد هوية المستخدم." });
             }
-
-            // التحقق مما إذا كان المستخدم قد اشترى هذا المنتج (باستخدام OrderItems و OrderStatus.Completed)
             var hasPurchased = await _context.OrderItems
                 .Include(oi => oi.Order)
                 .AnyAsync(oi => oi.ProductId == productId &&

@@ -21,12 +21,9 @@
     }
 </p>
 
-@* *** هذا الجزء لعرض رسالة StatusMessage *** *@
-@* تأكد من أن RegisterConfirmationModel.cs يحتوي على [TempData] public string StatusMessage { get; set; } *@
 @if (!string.IsNullOrEmpty(Model.StatusMessage))
 {
     <div class="alert alert-info" role="alert">
         @Model.StatusMessage
     </div>
 }
-@* ********************************************** *@

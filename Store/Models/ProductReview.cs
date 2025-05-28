@@ -1,5 +1,4 @@
-﻿// File: Store/Models/ProductReview.cs
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -18,10 +17,8 @@ namespace Store.Models
         [Required]
         public string UserId { get; set; } = null!;
 
-        // *** إضافة خاصية التنقل User هنا ***
         [ForeignKey("UserId")]
-        public virtual ApplicationUser User { get; set; } = null!; // يجب تهيئتها لتجنب CS8618
-        // **********************************
+        public virtual ApplicationUser User { get; set; } = null!; 
 
         [Range(1, 5)]
         public int Rating { get; set; }

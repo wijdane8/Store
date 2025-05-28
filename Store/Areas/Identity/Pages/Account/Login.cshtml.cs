@@ -1,5 +1,4 @@
-﻿// Store/Areas/Identity/Pages/Account/Login.cshtml.cs
-#nullable disable
+﻿#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -9,11 +8,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services; // قد لا تحتاجها إذا لم يكن لديك خدمة بريد إلكتروني
+using Microsoft.AspNetCore.Identity.UI.Services; 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
-using Store.Models; // تأكد من هذا الـ using لـ ApplicationUser
+using Store.Models;
 
 namespace Store.Areas.Identity.Pages.Account
 {
@@ -29,14 +28,14 @@ namespace Store.Areas.Identity.Pages.Account
         }
 
         [BindProperty]
-        public InputModel Input { get; set; } = new InputModel(); // *** تهيئة InputModel ***
+        public InputModel Input { get; set; } = new InputModel(); 
 
         public IList<AuthenticationScheme> ExternalLogins { get; set; } = new List<AuthenticationScheme>();
 
-        public string ReturnUrl { get; set; } = null!; // *** تهيئة ReturnUrl ***
+        public string ReturnUrl { get; set; } = null!; 
 
         [TempData]
-        public string ErrorMessage { get; set; } = null!; // *** تهيئة ErrorMessage ***
+        public string ErrorMessage { get; set; } = null!;
 
         public async Task OnGetAsync(string returnUrl = null)
         {
@@ -45,7 +44,7 @@ namespace Store.Areas.Identity.Pages.Account
                 ModelState.AddModelError(string.Empty, ErrorMessage);
             }
 
-            ReturnUrl = returnUrl ?? Url.Content("~/"); // Assign after checking ErrorMessage
+            ReturnUrl = returnUrl ?? Url.Content("~/"); 
 
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
@@ -89,11 +88,11 @@ namespace Store.Areas.Identity.Pages.Account
         {
             [Required]
             [EmailAddress]
-            public string Email { get; set; } = null!; // *** تهيئة Email ***
+            public string Email { get; set; } = null!; 
 
             [Required]
             [DataType(DataType.Password)]
-            public string Password { get; set; } = null!; // *** تهيئة Password ***
+            public string Password { get; set; } = null!; 
 
             [Display(Name = "Remember me?")]
             public bool RememberMe { get; set; }

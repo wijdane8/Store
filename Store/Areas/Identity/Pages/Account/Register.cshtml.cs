@@ -1,5 +1,4 @@
-﻿// Store/Areas/Identity/Pages/Account/Register.cshtml.cs
-#nullable disable
+﻿#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -17,7 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-using Store.Models; // تأكد من هذا الـ using لـ ApplicationUser
+using Store.Models;
 
 namespace Store.Areas.Identity.Pages.Account
 {
@@ -95,9 +94,8 @@ namespace Store.Areas.Identity.Pages.Account
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {
-                        // *** تغيير هنا: عرض رسالة في نفس الصفحة بدلاً من إعادة التوجيه ***
                         StatusMessage = "تم إنشاء حسابك بنجاح. يرجى التحقق من بريدك الإلكتروني لتأكيد حسابك. " +
-                "يمكنك الآن <a href='" + Url.Page("/Account/Login", new { area = "Identity" }) + "'>تسجيل الدخول</a>."; return Page(); // العودة إلى نفس الصفحة
+                "يمكنك الآن <a href='" + Url.Page("/Account/Login", new { area = "Identity" }) + "'>تسجيل الدخول</a>."; return Page();
                     }
                     else
                     {

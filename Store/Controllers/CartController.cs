@@ -12,20 +12,18 @@ namespace Store.Controllers
     {
         private readonly MyStoreContext _context;
 
-        // Make sure you have this constructor
         public CartController(MyStoreContext context)
         {
-            _context = context; // This should NOT be null
+            _context = context; 
         }
         [HttpPost]
         public IActionResult AddToCart(int productId, int quantity, bool redirectToCheckout = false)
         {
-            // Add to cart logic
+           
             if (redirectToCheckout)
                 return RedirectToAction("Checkout", "Cart");
             return Json(new { success = true });
         }
-        // Controllers/CartController.cs
         [Authorize]
         public async Task<IActionResult> Index()
         {
@@ -97,18 +95,29 @@ namespace Store.Controllers
 
         public class UpdateCartItemRequest { public int ItemId { get; set; } public int Quantity { get; set; } }
         public class RemoveCartItemRequest { public int ItemId { get; set; } }
-        // Controllers/CartController.cs
-        [HttpGet]
+        
+        [HttpGet("Cart/GetCount")]
         [Authorize]
         public async Task<IActionResult> GetCount()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var count = await _context.Carts
-                .Where(c => c.UserId == userId && c.Status == CartStatus.Active)
-                .SelectMany(c => c.CartItems)
-                .SumAsync(ci => ci.Quantity);
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                Console.WriteLine($"User ID: {userId}"); // Debugging
 
-            return Json(new { count });
+                var count = await _context.Carts
+                    .Where(c => c.UserId == userId && c.Status == CartStatus.Active)
+                    .SelectMany(c => c.CartItems)
+                    .SumAsync(ci => ci.Quantity);
+
+                Console.WriteLine($"Cart Count: {count}"); // Debugging
+                return Json(new { count });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetCount: {ex}");
+                return Json(new { count = 0 });
+            }
         }
     }
 }

@@ -2722,8 +2722,27 @@ section,
         max-width: 100%;
     }
 }
+/* Cart Counter Animation */
 .cart-count {
-    font-size: 0.7rem;
-    vertical-align: top;
-    margin-right: 3px;
+    transition: all 0.3s ease;
+}
+
+    .cart-count.count-updated {
+        transform: scale(1.2);
+        color: #28a745;
+    }
+
+/* Scroll Top Button */
+.scroll-top {
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+    .scroll-top.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+/* Mobile Nav Accessibility */
+.mobile-nav-toggle[aria-expanded="true"] {
+    z-index: 1001;
 }

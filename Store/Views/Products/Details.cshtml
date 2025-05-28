@@ -121,7 +121,11 @@
                                    id="productQuantity">
                             <button class="btn btn-outline-secondary quantity-btn" data-action="increment" type="button">+</button>
                         </div>
-                        <button class="btn btn-primary btn-lg w-100 add-to-cart" id="addToCartBtn" data-product-id="@Model.Id" @(Model.StockQuantity == 0 ? "disabled" : "") type="button">
+                        <button class="btn btn-primary btn-lg w-100 add-to-cart"
+                                id="addToCartBtn"
+                                data-product-id="@Model.Id"
+                        @(Model.StockQuantity == 0 ? "disabled" : "")
+                                type="button">
                             <i class="bi bi-cart3 me-2"></i>أضف إلى السلة
                         </button>
                     }
@@ -441,7 +445,7 @@
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // Initialize AOS if available
+            
             if (typeof AOS !== 'undefined') {
                 AOS.init({
                     duration: 800,
@@ -452,24 +456,19 @@
                 console.warn('AOS library not found. Skipping AOS initialization.');
             }
 
-            // --- Bootstrap Carousel Thumbnail Interaction ---
             const productCarouselElement = document.getElementById('productCarousel');
             if (productCarouselElement) {
-                // Initialize Bootstrap Carousel if not already done
-                // Use `new bootstrap.Carousel(element)` to get an instance
                 const carouselInstance = bootstrap.Carousel.getInstance(productCarouselElement) || new bootstrap.Carousel(productCarouselElement);
 
-                // Add click listener to thumbnails to slide the carousel
                 document.querySelectorAll('.thumbnail-scroller .thumbnail').forEach(thumb => {
                     thumb.addEventListener('click', function () {
-                        const slideTo = parseInt(this.dataset.bsSlideTo); // Get the slide index
-                        carouselInstance.to(slideTo); // Tell Bootstrap carousel to go to that slide
+                        const slideTo = parseInt(this.dataset.bsSlideTo); 
+                        carouselInstance.to(slideTo); 
                     });
                 });
 
-                // Listen for carousel slide event to update active thumbnail
                 productCarouselElement.addEventListener('slid.bs.carousel', function (event) {
-                    const activeIndex = event.to; // Index of the newly active slide
+                    const activeIndex = event.to; 
                     document.querySelectorAll('.thumbnail-scroller .thumbnail').forEach((thumb, index) => {
                         if (index === activeIndex) {
                             thumb.classList.add('active');
@@ -479,8 +478,6 @@
                     });
                 });
 
-                // Set initial active thumbnail (for page load)
-                // This ensures the first thumbnail is active when the page loads
                 const initialActiveThumbnail = document.querySelector('.thumbnail-scroller .thumbnail[data-bs-slide-to="0"]');
                 if (initialActiveThumbnail) {
                     initialActiveThumbnail.classList.add('active');
@@ -489,37 +486,34 @@
                 console.warn('Product carousel element not found. Thumbnail interaction may not work as expected.');
             }
 
-            // --- Quantity selector ---
-            // Only attach event listeners if quantity selector is present (i.e., user is logged in)
             const quantitySelector = document.querySelector('.quantity-selector');
             if (quantitySelector) {
                 document.querySelectorAll('.quantity-btn').forEach(btn => {
                     btn.addEventListener('click', function () {
-                        // Use closest() to find the parent quantity-selector and then its input
+                        
                         const input = this.closest('.quantity-selector').querySelector('input[type="number"]');
                         if (!input) {
                             console.error('Quantity input not found for button:', this);
                             return;
                         }
 
-                        let currentVal = parseInt(input.value) || 1; // Default to 1 if parsing fails or value is empty
+                        let currentVal = parseInt(input.value) || 1; 
                         const action = this.dataset.action;
-                        // Ensure maxQuantity is parsed as a number, defaulting to a large number if not set
+                        
                         const maxQuantity = parseInt(input.max) || 999;
 
                         if (action === 'increment') {
                             input.value = Math.min(currentVal + 1, maxQuantity);
-                        } else { // decrement
-                            input.value = Math.max(currentVal - 1, 1); // Ensure minimum is 1
+                        } else { 
+                            input.value = Math.max(currentVal - 1, 1); 
                         }
                     });
                 });
             }
 
 
-            // --- Add to Cart functionality ---
             const addToCartBtn = document.getElementById('addToCartBtn');
-            if (addToCartBtn) { // Only attach if the button exists (user is logged in)
+            if (addToCartBtn) {
                 addToCartBtn.addEventListener('click', async function () {
                     const productId = this.dataset.productId;
                     if (!productId) {
@@ -533,7 +527,7 @@
 
                     try {
                         const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]');
-                        if (!antiForgeryToken || !antiForgeryToken.value) { // Check if value exists too
+                        if (!antiForgeryToken || !antiForgeryToken.value) {
                             console.error("CSRF token not found or empty.");
                             Swal.fire({
                                 icon: 'error',
@@ -556,9 +550,8 @@
                             })
                         });
 
-                        // Improved error handling: attempt to read JSON message from server
                         if (!response.ok) {
-                            const errorData = await response.json(); // Assuming controller always returns JSON for errors
+                            const errorData = await response.json(); 
                             let errorMessage = errorData.message || `HTTP error! status: ${response.status}`;
                             throw new Error(errorMessage);
                         }
@@ -573,10 +566,9 @@
                                 showConfirmButton: false,
                                 timer: 1500
                             }).then(() => {
-                                // Consider a more robust cart update (e.g., fetching new cart count via AJAX)
-                                // rather than full page reload if only a small part of UI changes.
-                                location.reload(); // Reload to update cart count and stock status
+                                location.reload(); 
                             });
+                            window.updateCartCount();
                         } else {
                             Swal.fire({
                                 icon: 'error',
@@ -599,7 +591,6 @@
                 console.warn('Add to Cart button not found (expected when user is not logged in).');
             }
 
-                     // --- Add to Wishlist Button Handler ---
         const addToWishlistBtn = document.getElementById('addToWishlistBtn');
         if (addToWishlistBtn) {
             addToWishlistBtn.addEventListener('click', async function() {
@@ -637,7 +628,6 @@
                             showConfirmButton: false,
                             timer: 1500
                         });
-                        // Update button state
                         this.disabled = true;
                         this.innerHTML = '<i class="fas fa-heart"></i> تم الإضافة إلى المفضلة';
                     } else {
@@ -659,13 +649,11 @@
         }
 
 
-            // --- Review Form submission ---
             const reviewForm = document.getElementById('reviewForm');
             if (reviewForm) {
                 reviewForm.addEventListener('submit', async function (event) {
                     event.preventDefault();
 
-                    // Using FormData to easily get all form values
                     const formData = new FormData(this);
                     const productId = formData.get('productId');
                     const rating = parseInt(formData.get('rating'));
@@ -683,7 +671,6 @@
                     }
 
                     try {
-                        // Ensure the anti-forgery token is correctly picked from the form
                         const antiForgeryTokenInput = this.querySelector('input[name="__RequestVerificationToken"]');
                         if (!antiForgeryTokenInput || !antiForgeryTokenInput.value) { // Check if value exists too
                             console.error("CSRF token not found for review form.");
@@ -700,14 +687,13 @@
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                                'RequestVerificationToken': antiForgeryTokenInput.value // Use the value directly
+                                'RequestVerificationToken': antiForgeryTokenInput.value 
                             },
-                            body: new URLSearchParams(formData).toString() // Directly use formData with URLSearchParams
+                            body: new URLSearchParams(formData).toString() 
                         });
 
-                        // Improved error handling for server responses
                         if (!response.ok) {
-                            const errorData = await response.json(); // Assuming controller always returns JSON for errors
+                            const errorData = await response.json(); 
                             let errorMessage = errorData.message || `HTTP error! status: ${response.status}`;
                             throw new Error(errorMessage);
                         }
@@ -722,7 +708,7 @@
                                 showConfirmButton: false,
                                 timer: 1500
                             }).then(() => {
-                                location.reload(); // Reload to show the new review
+                                location.reload(); 
                             });
                         } else {
                             Swal.fire({

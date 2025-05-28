@@ -1,4 +1,4 @@
-﻿// Store/Models/OrderStatus.cs
+﻿
 namespace Store.Models
 {
     public enum OrderStatus

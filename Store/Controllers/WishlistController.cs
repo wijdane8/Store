@@ -12,7 +12,7 @@ namespace Store.Controllers
 
         public WishlistController(MyStoreContext context)
         {
-            _context = context; // Ensure this is not null
+            _context = context; 
         }
 
         [Authorize]

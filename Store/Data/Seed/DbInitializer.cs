@@ -1,5 +1,4 @@
-﻿// Store/Data/Seed/DbInitializer.cs
-using Store.Models;
+﻿using Store.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Collections.Generic;
@@ -11,11 +10,7 @@ namespace Store.Data.Seed
     {
         public static void Initialize(MyStoreContext context)
         {
-            // هذا السطر يمكن أن يكون مفيدًا لتطبيق الهجرات تلقائيًا عند بدء التشغيل في بيئة التطوير
-            // context.Database.Migrate();
-
-            // Seed Categories (تعبئة الفئات)
-            if (!context.Categories.Any()) // إذا لم تكن هناك أي فئات
+            if (!context.Categories.Any()) 
             {
                 var categories = new Category[]
                 {
@@ -26,8 +21,8 @@ namespace Store.Data.Seed
                     new Category { Name = "كتب" }
                 };
                 context.Categories.AddRange(categories);
-                context.SaveChanges(); // حفظ الفئات
-                Console.WriteLine("Categories seeded successfully."); // رسالة تأكيد (اختياري)
+                context.SaveChanges();
+                Console.WriteLine("Categories seeded successfully.");
             }
             else
             {

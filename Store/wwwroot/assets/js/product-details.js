@@ -465,4 +465,4 @@ document.addEventListener("DOMContentLoaded", function () {
 //         'Content-Type': 'application/json',
 //         'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
 //     },
-//     body: JSON.stringify
+//     body: JSON.stringify}

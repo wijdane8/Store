@@ -13,10 +13,10 @@ namespace Store.Models
         [Required]
         public string UserId { get; set; } = null!;
 
-        // *** إضافة خاصية التنقل User هنا ***
+        
         [ForeignKey("UserId")]
-        public virtual ApplicationUser User { get; set; } = null!; // يجب تهيئتها لتجنب CS8618
-        // **********************************
+        public virtual ApplicationUser User { get; set; } = null!; 
+       
 
         [Required]
         public int ProductId { get; set; }
@@ -24,6 +24,6 @@ namespace Store.Models
         public virtual Product Product { get; set; } = null!;
 
         [Column(TypeName = "datetime")]
-        public DateTime AddedDate { get; set; } = DateTime.Now; // تعيين قيمة افتراضية
+        public DateTime AddedDate { get; set; } = DateTime.Now; 
     }
 }

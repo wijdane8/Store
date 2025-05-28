@@ -1,5 +1,4 @@
-﻿// Store.Services/EmailService.cs
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net.Mail;
 using System.Net;
@@ -43,24 +42,21 @@ namespace Store.Services
 
                 using (var client = new SmtpClient(_smtpSettings.Server, _smtpSettings.Port))
                 {
-                    // *** التعديل هنا: استخدام TryParse أو التأكد من النوع بشكل مباشر ***
-                    // الأفضل هو التأكد أن التحميل من appsettings.json يعمل بشكل سليم
-                    // ولكن لتجنب هذا الخطأ بالتحديد:
                     bool enableSslValue;
-                    if (_smtpSettings.EnableSsl is bool sslValue) // التحقق من أنها bool بالفعل
+                    if (_smtpSettings.EnableSsl is bool sslValue) 
                     {
                         enableSslValue = sslValue;
                     }
-                    else if (bool.TryParse(_smtpSettings.EnableSsl.ToString(), out sslValue)) // محاولة التحويل من string إذا كانت كذلك
+                    else if (bool.TryParse(_smtpSettings.EnableSsl.ToString(), out sslValue)) 
                     {
                         enableSslValue = sslValue;
                     }
                     else
                     {
                         _logger.LogError("SmtpSettings.EnableSsl could not be converted to boolean. Defaulting to false.");
-                        enableSslValue = false; // قيمة افتراضية إذا فشل التحويل
+                        enableSslValue = false;
                     }
-                    client.EnableSsl = enableSslValue; // السطر 79 تقريباً بعد التعديل
+                    client.EnableSsl = enableSslValue; 
 
                     client.UseDefaultCredentials = false;
                     client.Credentials = new NetworkCredential(smtpUsername, smtpPassword);

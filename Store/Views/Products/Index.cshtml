@@ -20,11 +20,11 @@
                         <div class="product-box">
                             <div class="product-image-container">
                                 @{
-                                    // Find the main image where IsMain is true, or the first image if no main is specified
-                                    var mainImage = product.ProductImages?.FirstOrDefault(pi => pi.IsMain.HasValue && pi.IsMain.Value) // <--- FIX HERE
+                                    
+                                    var mainImage = product.ProductImages?.FirstOrDefault(pi => pi.IsMain.HasValue && pi.IsMain.Value) 
                                     ?? product.ProductImages?.FirstOrDefault();
 
-                                    // If a main image is found, use its URL. Otherwise, use a placeholder.
+                                    
                                     string imageUrl = mainImage != null ? mainImage.ImageUrl : "https://placehold.co/400x300/EEE/31343C/FFF?text=No+Image";
                                 }
                                 <img src="@imageUrl"
@@ -47,7 +47,7 @@
                                 </a>
                             </div>
                             <div class="product-price-info">
-                                @* عرض السعر القديم إذا كان موجوداً وأكبر من السعر الحالي *@
+                                
                                 @if (product.OldPrice.HasValue && product.OldPrice.Value > product.Price)
                                 {
 
@@ -65,7 +65,7 @@
                             </p>
                             <p class="stock-info">
                                 <strong>المخزون:</strong>
-                                @* استخدام StockQuantity للتحقق والعرض *@
+                                
                                 @if (product.StockQuantity.HasValue && product.StockQuantity.Value > 0)
                                 {
                                     <span class="text-success">متوفر (@product.StockQuantity.Value)</span>
@@ -122,10 +122,10 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script> @* تأكد من تضمين AOS JS هنا *@
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script> 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // تهيئة AOS إذا كانت المكتبة موجودة
+            
             if (typeof AOS !== 'undefined') {
                 AOS.init({
                     duration: 800,
@@ -136,17 +136,15 @@
                 console.warn('AOS library not found. Skipping AOS initialization.');
             }
 
-            // إضافة "ر.س" بعد السعر
             const priceElements = document.querySelectorAll('.product-price-info .current-price');
             priceElements.forEach(priceElement => {
                 priceElement.innerHTML += ' ر.س';
             });
 
-            // منطق الإضافة إلى السلة
             document.querySelectorAll('.add-to-cart-btn').forEach(button => {
                 button.addEventListener('click', async function () {
                     const productId = this.dataset.productId;
-                    const quantity = 1; // الكمية الافتراضية للإضافة
+                    const quantity = 1; 
 
                     try {
                         const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]');
@@ -165,7 +163,7 @@
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'RequestVerificationToken': antiForgeryToken.value // إرسال رمز التحقق
+                                'RequestVerificationToken': antiForgeryToken.value 
                             },
                             body: JSON.stringify({ productId: parseInt(productId), quantity: quantity })
                         });
@@ -206,7 +204,7 @@
 }
 
 <style>
-    /* تنسيقات CSS أساسية للبطاقات لتبدو جيدة (يمكن نقلها إلى ملف CSS خارجي) */
+    
     .product-box {
         background-color: #fff;
         border: 1px solid #e0e0e0;
@@ -302,7 +300,7 @@
             cursor: not-allowed;
         }
 
-    /* تحسينات لصفحة الميزات الإضافية */
+    
     .section ul {
         list-style: none;
         padding: 0;

@@ -1,5 +1,4 @@
-﻿// Models/CartViewModel.cs
-using Store.Models;
+﻿using Store.Models;
 
 public class CartViewModel
 {

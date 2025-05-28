@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
-using Store.Models; // Adjust namespace
-using Store.Services; // Adjust namespace
+using Store.Models; 
+using Store.Services; 
 
-namespace Store.Controllers // Adjust namespace
+namespace Store.Controllers 
 {
     public class ContactController : Controller
     {
@@ -20,39 +20,30 @@ namespace Store.Controllers // Adjust namespace
         [HttpGet]
         public IActionResult Index()
         {
-            return View(); // Create this view (Contact/Index.cshtml)
+            return View(); 
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken] // Important for security
+        [ValidateAntiForgeryToken] 
         public async Task<IActionResult> SubmitForm(ContactFormModel model)
         {
             if (!ModelState.IsValid)
             {
-                // Return JSON for AJAX
+                
                 return Json(new { success = false, message = "الرجاء تصحيح الأخطاء في النموذج." });
-                // Or, for a standard MVC form post:
-                //return View("Index", model); // Return to the form with errors
+                
             }
 
             try
             {
                 await _emailService.SendContactFormEmailAsync(model);
                 _logger.LogInformation("Contact form submitted by {Email}", model.Email);
-                // Return JSON for AJAX
                 return Json(new { success = true, message = "تم إرسال رسالتك بنجاح!" });
-                // Or, for a standard MVC form post:
-                //TempData["SuccessMessage"] = "تم إرسال رسالتك بنجاح!";
-                //return RedirectToAction("Index"); // Redirect to clear the form
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error sending email");
-                // Return JSON for AJAX
                 return Json(new { success = false, message = "فشل إرسال رسالتك. الرجاء المحاولة مرة أخرى لاحقًا." });
-                // Or, for a standard MVC form post:
-                //ModelState.AddModelError("", "فشل إرسال رسالتك. الرجاء المحاولة مرة أخرى لاحقًا.");
-                //return View("Index", model); // Return to the form with errors
             }
         }
     }

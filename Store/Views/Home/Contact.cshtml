@@ -1,7 +1,7 @@
-﻿@model Store.Models.ContactFormModel // Adjust namespace
+﻿@model Store.Models.ContactFormModel 
 
 @{
-    ViewData["Title"] = "تواصل معنا"; // Set the page title
+    ViewData["Title"] = "تواصل معنا"; 
 }
 
 <section id="contact" class="section contact-section">
@@ -98,7 +98,7 @@
 
                     $.ajax({
                         type: "POST",
-                        url: form.attr('action'), // Use the form's action attribute
+                        url: form.attr('action'), 
                         data: form.serialize(),
                         success: function (response) {
                             loading.hide();
@@ -120,6 +120,6 @@
             });
         });
     </script>
-<partial name="_ValidationScriptsPartial" /> @* For client-side validation *@
+<partial name="_ValidationScriptsPartial" /> 
 }
 @* todo *@

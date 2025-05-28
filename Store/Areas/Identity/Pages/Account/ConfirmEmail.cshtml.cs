@@ -1,5 +1,4 @@
-﻿// Store/Areas/Identity/Pages/Account/ConfirmEmail.cshtml.cs
-using System;
+﻿using System;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -7,7 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
-using Store.Models; // تأكد من أن هذا الـ using يشير إلى ApplicationUser الخاص بك
+using Store.Models; 
 
 namespace Store.Areas.Identity.Pages.Account
 {
@@ -22,7 +21,7 @@ namespace Store.Areas.Identity.Pages.Account
         }
 
         [TempData]
-        public string? StatusMessage { get; set; } // اجعلها قابلة للقيمة الفارغة (nullable)
+        public string? StatusMessage { get; set; } 
 
         public async Task<IActionResult> OnGetAsync(string userId, string code)
         {
@@ -43,16 +42,13 @@ namespace Store.Areas.Identity.Pages.Account
             if (result.Succeeded)
             {
                 StatusMessage = "شكرًا لك على تأكيد بريدك الإلكتروني. يمكنك الآن تسجيل الدخول.";
-                // *** إضافة هذا السطر لإعادة التوجيه إلى صفحة تسجيل الدخول ***
-                return RedirectToPage("./Login"); // أو "/Account/Login" إذا كانت في مسار مختلف
+                return RedirectToPage("./Login"); 
             }
             else
             {
                 StatusMessage = "خطأ في تأكيد بريدك الإلكتروني.";
             }
 
-            // إذا أردت عرض رسالة ConfirmEmail.cshtml بدلاً من إعادة التوجيه
-            // يمكنك إزالة سطر RedirectToPage("./Login"); وستظهر الرسالة الافتراضية
             return Page();
         }
     }
