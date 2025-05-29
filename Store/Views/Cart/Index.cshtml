@@ -4,44 +4,60 @@
 }
 
 <div class="container py-5">
-    <h1 class="mb-4">سلة التسوق</h1>
+    <h1 class="mb-4 text-center" aria-label="سلة التسوق">سلة التسوق</h1>
 
     @if (Model.CartItems.Any())
     {
+        <!-- نقل ملخص الطلب إلى الأعلى -->
+        <div class="cart-summary-top mb-4" role="region" aria-label="ملخص الطلب">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-bold fs-5">عدد المنتجات: <span class="total-items">@Model.TotalItems</span></span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-bold fs-5">المجموع: <span class="total-price">@Model.TotalPrice.ToString("N2") ر.س</span></span>
+                </div>
+                <a href="/Checkout" class="btn btn-primary py-2 px-4" role="button">إتمام الشراء</a>
+            </div>
+        </div>
+
         <div class="row">
-            <div class="col-lg-8">
-                <div class="card shadow-sm">
+            <div class="col-12">
+                <div class="card shadow-sm mb-4" role="region" aria-label="عناصر السلة">
                     <div class="card-body">
                         @foreach (var item in Model.CartItems)
                         {
-                            <div class="row align-items-center mb-4">
+                            <div class="row align-items-center mb-4 cart-item" data-id="@item.Id">
                                 <div class="col-md-2">
                                     <img src="@(item.Product.ProductImages.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png")"
-                                         class="img-fluid rounded" alt="@item.Product.Name">
+                                         class="img-fluid rounded" alt="@item.Product.Name" loading="lazy">
                                 </div>
                                 <div class="col-md-4">
                                     <h5>@item.Product.Name</h5>
                                     <p class="text-muted">@item.Product.ShortDescription</p>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="input-group">
+                                    <div class="input-group" role="group" aria-label="تعديل الكمية">
                                         <button class="btn btn-outline-secondary update-quantity"
-                                                data-action="decrease" data-id="@item.Id">
-                                            -
+                                                data-action="decrease" data-id="@item.Id" aria-label="تقليل الكمية">
+                                            <i class="fas fa-minus"></i>
                                         </button>
                                         <input type="number" class="form-control text-center quantity-input"
-                                               value="@item.Quantity" min="1" max="50" data-id="@item.Id">
+                                               value="@item.Quantity" min="1" max="50" data-id="@item.Id"
+                                               aria-label="الكمية">
                                         <button class="btn btn-outline-secondary update-quantity"
-                                                data-action="increase" data-id="@item.Id">
-                                            +
+                                                data-action="increase" data-id="@item.Id" aria-label="زيادة الكمية">
+                                            <i class="fas fa-plus"></i>
                                         </button>
                                     </div>
                                 </div>
                                 <div class="col-md-2">
-                                    <span class="fw-bold">@((item.Price * item.Quantity).ToString("N2")) ر.س</span>
+                                    <span class="fw-bold item-total" data-price="@item.Price">
+                                        @((item.Price * item.Quantity).ToString("N2")) ر.س
+                                    </span>
                                 </div>
                                 <div class="col-md-1">
-                                    <button class="btn btn-danger remove-item" data-id="@item.Id">
+                                    <button class="btn btn-danger remove-item" data-id="@item.Id" aria-label="حذف المنتج">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -50,62 +66,62 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-4">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">ملخص الطلب</h5>
-                        <hr>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>عدد المنتجات:</span>
-                            <span>@Model.TotalItems</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-3">
-                            <span>المجموع:</span>
-                            <span class="fw-bold">@Model.TotalPrice.ToString("N2") ر.س</span>
-                        </div>
-                        <a href="/Checkout" class="btn btn-primary w-100 py-2">إتمام الشراء</a>
-                    </div>
-                </div>
-            </div>
         </div>
     }
     else
     {
-        <div class="alert alert-info text-center py-5">
+        <div class="alert alert-info text-center py-5" role="alert">
             <i class="fas fa-shopping-cart fa-3x mb-3"></i>
             <h4>سلة التسوق فارغة</h4>
             <p class="mb-0">لا توجد منتجات في سلة التسوق الخاصة بك</p>
-            <a href="/Products" class="btn btn-primary mt-3">تصفح المنتجات</a>
+            <a href="/Products" class="btn btn-primary mt-3" role="button">تصفح المنتجات</a>
         </div>
     }
+
+    <!-- إضافة مؤشر تحميل (Spinner) -->
+    <div id="cart-loading" class="d-none position-fixed top-50 start-50 translate-middle text-center">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     <script>
+        // إضافة إزالة الـ Preloader
+        document.addEventListener('DOMContentLoaded', () => {
+            const preloader = document.getElementById('preloader');
+            if (preloader) preloader.remove();
+        });
+
+        // إضافة مستمعات الأحداث لتحديث الكمية
         document.querySelectorAll('.update-quantity').forEach(btn => {
-            btn.addEventListener('click', async function() {
+            btn.addEventListener('click', async function () {
                 const action = this.dataset.action;
                 const itemId = this.dataset.id;
                 const input = document.querySelector(`.quantity-input[data-id="${itemId}"]`);
-
                 let newQty = parseInt(input.value);
-                if (action === 'increase') newQty++;
-                else if (action === 'decrease' && newQty > 1) newQty--;
 
+                if (action === 'increase' && newQty < 50) newQty++;
+                else if (action === 'decrease' && newQty > 1) newQty--;
+                else return;
+
+                input.value = newQty;
                 await updateCartItem(itemId, newQty);
             });
         });
 
+        // إضافة مستمعات الأحداث للحذف
         document.querySelectorAll('.remove-item').forEach(btn => {
-            btn.addEventListener('click', async function() {
+            btn.addEventListener('click', async function () {
                 if (confirm('هل أنت متأكد من حذف هذا المنتج من السلة؟')) {
                     await removeCartItem(this.dataset.id);
-                    location.reload();
                 }
             });
         });
 
         async function updateCartItem(itemId, quantity) {
+            toggleLoading(true);
             try {
                 const response = await fetch('/Cart/UpdateItem', {
                     method: 'POST',
@@ -116,23 +132,28 @@
                     body: JSON.stringify({ itemId, quantity })
                 });
 
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const result = await response.json();
-                if (result.success) location.reload();
-                else alert(result.message);
+                if (result.success) {
+                    updateCartUI(itemId, quantity, result);
+                    await updateCartCount();
+                } else {
+                    alert(result.message || 'حدث خطأ أثناء تحديث الكمية');
+                    const input = document.querySelector(`.quantity-input[data-id="${itemId}"]`);
+                    input.value = result.quantity || 1;
+                }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error updating cart:', error);
                 alert('حدث خطأ أثناء تحديث الكمية');
+                const input = document.querySelector(`.quantity-input[data-id="${itemId}"]`);
+                input.value = parseInt(input.value) || 1;
+            } finally {
+                toggleLoading(false);
             }
         }
-                async function removeCartItem(itemId) {
-            const response = await fetch('/Cart/RemoveItem', { ... });
-            const result = await response.json();
-            if (result.success) {
-                await updateCartCount(); 
-                location.reload();
-            }
-        }
+
         async function removeCartItem(itemId) {
+            toggleLoading(true);
             try {
                 const response = await fetch('/Cart/RemoveItem', {
                     method: 'POST',
@@ -143,12 +164,50 @@
                     body: JSON.stringify({ itemId })
                 });
 
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const result = await response.json();
-                if (!result.success) alert(result.message);
+                if (result.success) {
+                    const itemElement = document.querySelector(`.cart-item[data-id="${itemId}"]`);
+                    if (itemElement) {
+                        itemElement.classList.add('fade-out');
+                        setTimeout(() => itemElement.remove(), 300);
+                    }
+                    updateCartSummary(result);
+                    await updateCartCount();
+                } else {
+                    alert(result.message || 'حدث خطأ أثناء حذف المنتج');
+                }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error removing item:', error);
                 alert('حدث خطأ أثناء حذف المنتج');
+            } finally {
+                toggleLoading(false);
             }
+        }
+
+        function updateCartUI(itemId, quantity, result) {
+            const itemElement = document.querySelector(`.cart-item[data-id="${itemId}"]`);
+            if (!itemElement) return;
+            const totalElement = itemElement.querySelector('.item-total');
+            const price = parseFloat(totalElement.dataset.price);
+            totalElement.textContent = (price * quantity).toFixed(2) + ' ر.س';
+            updateCartSummary(result);
+        }
+
+        function updateCartSummary(result) {
+            const totalItemsElement = document.querySelector('.total-items');
+            const totalPriceElement = document.querySelector('.total-price');
+            const totalItems = result.totalItems !== undefined ? result.totalItems : 0;
+            const totalPrice = result.totalPrice !== undefined ? result.totalPrice : 0;
+            totalItemsElement.textContent = totalItems;
+            totalPriceElement.textContent = totalPrice.toFixed(2) + ' ر.س';
+            if (totalItems === 0) setTimeout(() => window.location.href = '/Cart', 500);
+        }
+
+        function toggleLoading(show) {
+            const loading = document.getElementById('cart-loading');
+            if (loading) loading.classList.toggle('d-none', !show);
         }
     </script>
 }
+

@@ -2746,3 +2746,40 @@ section,
 .mobile-nav-toggle[aria-expanded="true"] {
     z-index: 1001;
 }
+
+.cart-item {
+    transition: opacity 0.3s ease;
+}
+
+    .cart-item.fade-out {
+        opacity: 0;
+    }
+
+.quantity-input {
+    max-width: 80px;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+@media (max-width: 576px) {
+    .cart-item .col-md-2,
+    .cart-item .col-md-4,
+    .cart-item .col-md-3,
+    .cart-item .col-md-1 {
+        margin-bottom: 4rem;
+    }
+
+    .cart-summary-top {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+        .cart-summary-top .btn {
+            width: 100%;
+        }
+
+    }
+}
