@@ -1,345 +1,469 @@
 ﻿@model IEnumerable<Store.Models.Product>
-
 @{
     ViewData["Title"] = "المنتجات";
+    ViewData["Description"] = "اكتشف مجموعتنا الواسعة من المنتجات عالية الجودة";
 }
 
-<section id="products" class="section products-section">
+<section id="products" class="section products-section" aria-labelledby="products-heading">
     <div class="container" data-aos="fade-up">
         <div class="section-title">
-            <h2>@ViewData["Title"]</h2>
-            <p>اكتشف مجموعتنا الواسعة من المنتجات عالية الجودة.</p>
+            <h1 id="products-heading">@ViewData["Title"]</h1>
+            <p>@ViewData["Description"]</p>
         </div>
 
         <div class="row gy-4" data-aos="fade-up" data-aos-delay="200">
-            @if (Model != null && Model.Any())
+            @if (Model?.Any() == true)
             {
                 @foreach (var product in Model)
                 {
                     <div class="col-lg-4 col-md-6">
-                        <div class="product-box">
+                        <article class="product-box">
                             <div class="product-image-container">
                                 @{
-                                    
-                                    var mainImage = product.ProductImages?.FirstOrDefault(pi => pi.IsMain.HasValue && pi.IsMain.Value) 
+                                    var mainImage = product.ProductImages?
+                                    .FirstOrDefault(pi => pi.IsMain ?? false)
                                     ?? product.ProductImages?.FirstOrDefault();
 
-                                    
-                                    string imageUrl = mainImage != null ? mainImage.ImageUrl : "https://placehold.co/400x300/EEE/31343C/FFF?text=No+Image";
+                                    var imageUrl = mainImage?.ImageUrl ?? "https://placehold.co/400x300/EEE/31343C/FFF?text=No+Image";
+                                    var imageAlt = $"{product.Name} - صورة المنتج";
                                 }
                                 <img src="@imageUrl"
-                                     alt="@product.Name"
-                                     class="img-fluid rounded product-image" />
+                                     alt="@imageAlt"
+                                     class="img-fluid rounded product-image"
+                                     loading="lazy"
+                                     width="400"
+                                     height="300" />
                             </div>
-                            <h3>@product.Name</h3>
-                            <p class="description">
-                                @(product.Description != null && product.Description.Length > 100 ? product.Description.Substring(0, 100) + "..." : product.Description)
-                            </p>
-                            <div class="rating-section mb-4">
+                            <h2 class="product-title">@product.Name</h2>
+                            @* <div class="product-description"> *@
+                            @*     @if (!string.IsNullOrEmpty(product.Description)) *@
+                            @*     { *@
+                            @*         <p>@product.Description.Truncate(100)</p> *@
+                            @*     } *@
+                            @* </div> *@
+                            <div class="product-rating" aria-label="التقييم @product.AverageRating من 5">
                                 <div class="stars">
                                     @for (int i = 1; i <= 5; i++)
                                     {
-                                        <i class="bi @(i <= product.AverageRating ? "bi-star-fill" : "bi-star")"></i>
+                                        <span class="bi @(i <= product.AverageRating ? "bi-star-fill" : "bi-star")"
+                                              aria-hidden="true"></span>
                                     }
                                 </div>
-                                <a href="#reviews" class="review-count">
-                                    (@product.ReviewCount تقييم)
-                                </a>
+                                <span class="review-count">(@product.ReviewCount تقييم)</span>
                             </div>
                             <div class="product-price-info">
-                                
-                                @if (product.OldPrice.HasValue && product.OldPrice.Value > product.Price)
+                                @if (product.OldPrice > product.Price)
                                 {
-
-                                    <p class="price">السعر: <span class="old-price">@product.OldPrice.Value.ToString("N2")</span><span class="current-price">@product.Price.ToString("N2")</span></p>
-                                    <span class="discount-badge">خصم @((100 - (product.Price / product.OldPrice.Value * 100)).ToString("N0"))%</span>
+                                    <p class="price">
+                                        <span class="sr-only">السعر</span>
+                                        <span class="old-price" aria-hidden="true">@product.OldPrice.Value.ToString("N2") ر.س</span>
+                                        <span class="current-price">@product.Price.ToString("N2") <span class="currency">ر.س</span></span>
+                                    </p>
+                                    <span class="discount-badge">
+                                        وفر @((100 - (product.Price / product.OldPrice.Value * 100)).ToString("N0"))%
+                                    </span>
                                 }
                                 else
                                 {
-                                    <p class="price">السعر: <span class="current-price">@product.Price.ToString("N2")</span></p>
+                                    <p class="price">
+                                        <span class="sr-only">السعر</span>
+                                        <span class="current-price">@product.Price.ToString("N2") <span class="currency">ر.س</span></span>
+                                    </p>
                                 }
                             </div>
-                            <p class="category-info">
-                                <strong>الفئة:</strong>
-                                @product.Cat?.Name
-                            </p>
-                            <p class="stock-info">
-                                <strong>المخزون:</strong>
-                                
-                                @if (product.StockQuantity.HasValue && product.StockQuantity.Value > 0)
+                            <div class="product-meta">
+                                <p class="category-info">
+                                    <strong>الفئة:</strong>
+                                    @product.Cat?.Name
+                                </p>
+                                <p class="stock-info">
+                                    <strong>المخزون:</strong>
+                                    @if (product.StockQuantity > 0)
+                                    {
+                                        <span class="text-success">متوفر (@product.StockQuantity.Value)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger">غير متوفر</span>
+                                    }
+                                </p>
+                            </div>
+                            <div class="product-actions">
+                                <a asp-action="Details" asp-route-id="@product.Id"
+                                   class="btn btn-primary product-details-btn"
+                                   aria-label="تفاصيل المنتج @product.Name">
+                                    التفاصيل
+                                </a>
+                                @if (User.Identity?.IsAuthenticated == true)
                                 {
-                                    <span class="text-success">متوفر (@product.StockQuantity.Value)</span>
+                                    <button type="button"
+                                            class="btn btn-success add-to-cart-btn"
+                                            data-product-id="@product.Id"
+                                    @(product.StockQuantity == 0 ? "disabled" : "")
+                                            aria-label="أضف @product.Name إلى السلة">
+                                        <span class="bi bi-cart-plus" aria-hidden="true"></span> إضافة للسلة
+                                    </button>
                                 }
-                                else
-                                {
-                                    <span class="text-danger">غير متوفر</span>
-                                }
-                            </p>
-                            <a asp-action="Details" asp-route-id="@product.Id" class="btn btn-primary product-details-btn">التفاصيل</a>
-                            @if (User.Identity.IsAuthenticated)
-                            {
-                            <button type="button" class="btn btn-success add-to-cart-btn" data-product-id="@product.Id" @(product.StockQuantity.HasValue && product.StockQuantity.Value == 0 ? "disabled" : "")>
-                                <i class="bi bi-cart-plus"></i> إضافة للسلة
-                            </button>
-                            }
-                        </div>
+                            </div>
+                        </article>
                     </div>
                 }
             }
             else
             {
                 <div class="col-12 text-center py-5">
-                    <i class="bi bi-box-seam" style="font-size: 3rem; color: #ccc;"></i>
-                    <p class="lead mt-3">عذرًا، لا توجد منتجات لعرضها حاليًا.</p>
-                    <p>يرجى العودة لاحقًا أو استكشاف أقسام أخرى.</p>
+                    <div class="empty-state" role="status" aria-live="polite">
+                        <span class="bi bi-box-seam text-muted" style="font-size: 3rem;"></span>
+                        <h2 class="h4 mt-3">عذرًا، لا توجد منتجات لعرضها حاليًا</h2>
+                        <p class="text-muted">يرجى العودة لاحقًا أو استكشاف أقسام أخرى</p>
+                    </div>
                 </div>
             }
         </div>
 
-        @if (Model != null && Model.Any())
+        @if (Model?.Any() == true)
         {
             <div class="row mt-5 pt-3 align-items-center" data-aos="fade-up" data-aos-delay="400">
                 <div class="col-lg-2 text-center">
-                    <i class="bi bi-basket3 text-success-emphasis" style="font-size: 4rem;"></i>
+                    <span class="bi bi-basket3 text-success-emphasis" style="font-size: 4rem;" aria-hidden="true"></span>
                 </div>
-                <div class="col-lg-10 text-capitalize">
-                    <h3 class="mb-3">ميزات إضافية</h3>
+                <div class="col-lg-10">
+                    <h2 class="h3 mb-3">ميزات إضافية</h2>
                     <p class="lead">
                         استمتع بتجربة تسوق استثنائية مع ميزاتنا الفريدة:
                     </p>
-                    <ul>
-                        <li><i class="bi bi-check-circle me-2 text-success"></i> خيارات دفع آمنة ومتنوعة.</li>
-                        <li><i class="bi bi-truck me-2 text-success"></i> توصيل سريع وموثوق إلى باب منزلك.</li>
-                        <li><i class="bi bi-arrow-return-left me-2 text-success"></i> سياسة إرجاع واستبدال مرنة.</li>
-                        <li><i class="bi bi-shield-check me-2 text-success"></i> ضمان جودة على جميع المنتجات.</li>
+                    <ul class="features-list">
+                        <li>
+                            <span class="bi bi-check-circle text-success me-2" aria-hidden="true"></span>
+                            خيارات دفع آمنة ومتنوعة
+                        </li>
+                        <li>
+                            <span class="bi bi-truck text-success me-2" aria-hidden="true"></span>
+                            توصيل سريع وموثوق إلى باب منزلك
+                        </li>
+                        <li>
+                            <span class="bi bi-arrow-return-left text-success me-2" aria-hidden="true"></span>
+                            سياسة إرجاع واستبدال مرنة
+                        </li>
+                        <li>
+                            <span class="bi bi-shield-check text-success me-2" aria-hidden="true"></span>
+                            ضمان جودة على جميع المنتجات
+                        </li>
                     </ul>
                     <a href="#" class="btn btn-outline-primary mt-3">تسوق الآن واستفد من عروضنا</a>
                 </div>
             </div>
         }
     </div>
-</section>
 
-@section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script> 
+    <style>
+        /* Base Styles */
+        .product-box {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.25rem;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+            .product-box:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            }
+
+        /* Image Styles */
+        .product-image-container {
+            aspect-ratio: 4/3;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+        }
+
+        .product-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 4px;
+            transition: transform 0.3s ease;
+        }
+
+        .product-box:hover .product-image {
+            transform: scale(1.05);
+        }
+
+        /* Typography */
+        .product-title {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            color: #333;
+            line-height: 1.3;
+        }
+
+        .product-description {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1rem;
+            flex-grow: 1;
+        }
+
+        /* Rating */
+        .product-rating {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .stars {
+            color: #ffc107;
+            font-size: 1rem;
+        }
+
+        .review-count {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        /* Price */
+        .product-price-info {
+            margin-bottom: 1rem;
+        }
+
+        .price {
+            margin-bottom: 0.5rem;
+        }
+
+        .old-price {
+            text-decoration: line-through;
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-left: 0.5rem;
+        }
+
+        .current-price {
+            font-size: 1.25rem;
+            color: #e67e22;
+            font-weight: bold;
+        }
+
+        .currency {
+            font-size: 0.9em;
+        }
+
+        .discount-badge {
+            background-color: #e74c3c;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            display: inline-block;
+        }
+
+        /* Meta Info */
+        .product-meta {
+            font-size: 0.85rem;
+            color: #777;
+            margin-bottom: 1rem;
+            text-align: right;
+        }
+
+        /* Buttons */
+        .product-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .product-details-btn,
+        .add-to-cart-btn {
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+            .add-to-cart-btn:disabled {
+                background-color: #cccccc;
+                border-color: #cccccc;
+                cursor: not-allowed;
+                opacity: 0.7;
+            }
+
+        /* Section Styles */
+        .section-title {
+            margin-bottom: 2.5rem;
+            text-align: center;
+        }
+
+            .section-title h1 {
+                font-size: 2rem;
+                font-weight: 700;
+                color: #333;
+                position: relative;
+                padding-bottom: 0.75rem;
+            }
+
+                .section-title h1::after {
+                    content: '';
+                    position: absolute;
+                    width: 60px;
+                    height: 4px;
+                    background: #007bff;
+                    bottom: 0;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    border-radius: 2px;
+                }
+
+            .section-title p {
+                margin-top: 0.75rem;
+                font-size: 1.1rem;
+                color: #777;
+                max-width: 700px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+        /* Features List */
+        .features-list {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0;
+        }
+
+            .features-list li {
+                margin-bottom: 0.75rem;
+                color: #555;
+                display: flex;
+                align-items: center;
+            }
+
+        /* Empty State */
+        .empty-state {
+            padding: 2rem;
+        }
+
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Responsive */
+        @@media (max-width: 767.98px) {
+            .product-box {
+                padding: 1rem;
+            }
+
+            .product-title {
+                font-size: 1.1rem;
+            }
+
+            .section-title h1 {
+                font-size: 1.75rem;
+            }
+        }
+    </style>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            
+            // Initialize AOS animations
             if (typeof AOS !== 'undefined') {
                 AOS.init({
                     duration: 800,
                     easing: "ease-in-out",
                     once: true,
+                    mirror: false
                 });
-            } else {
-                console.warn('AOS library not found. Skipping AOS initialization.');
             }
 
-            const priceElements = document.querySelectorAll('.product-price-info .current-price');
-            priceElements.forEach(priceElement => {
-                priceElement.innerHTML += ' ر.س';
-            });
-
+            // Add to cart functionality
             document.querySelectorAll('.add-to-cart-btn').forEach(button => {
                 button.addEventListener('click', async function () {
                     const productId = this.dataset.productId;
-                    const quantity = 1; 
+                    const button = this;
 
                     try {
-                        const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]');
+                        // Disable button during request
+                        button.disabled = true;
+                        button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري الإضافة...';
+
+                        const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
                         if (!antiForgeryToken) {
-                            console.error("CSRF token not found. Add @Html.AntiForgeryToken() to your form or layout.");
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'خطأ في الأمان!',
-                                text: 'رمز التحقق مفقود. يرجى إعادة تحميل الصفحة.',
-                                showConfirmButton: true
-                            });
-                            return;
+                            throw new Error("CSRF token not found");
                         }
 
-                        const response = await fetch('/Products/AddToCart', {
+                        const response = await fetch('/Cart/AddItem', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'RequestVerificationToken': antiForgeryToken.value 
+                                'RequestVerificationToken': antiForgeryToken
                             },
-                            body: JSON.stringify({ productId: parseInt(productId), quantity: quantity })
+                            body: JSON.stringify({
+                                productId: parseInt(productId),
+                                quantity: 1
+                            })
                         });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
 
                         const result = await response.json();
 
-                        if (result.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'تمت الإضافة!',
-                                text: result.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'خطأ!',
-                                text: result.message,
-                                showConfirmButton: true
-                            });
+                        // Show success message
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-start',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                            didOpen: (toast) => {
+                                toast.addEventListener('mouseenter', Swal.stopTimer)
+                                toast.addEventListener('mouseleave', Swal.resumeTimer)
+                            }
+                        });
+
+                        Toast.fire({
+                            icon: 'success',
+                            title: 'تمت إضافة المنتج إلى السلة'
+                        });
+
+                        // Update cart count globally
+                        if (typeof updateCartCount === 'function') {
+                            updateCartCount();
                         }
                     } catch (error) {
                         console.error('Error adding to cart:', error);
                         Swal.fire({
                             icon: 'error',
-                            title: 'خطأ في الاتصال!',
-                            text: 'حدث خطأ أثناء إضافة المنتج. يرجى المحاولة لاحقًا.',
-                            showConfirmButton: true
+                            title: 'خطأ!',
+                            text: 'حدث خطأ أثناء إضافة المنتج. يرجى المحاولة مرة أخرى.',
+                            confirmButtonText: 'حسنًا'
                         });
+                    } finally {
+                        // Re-enable button
+                        button.disabled = false;
+                        button.innerHTML = '<span class="bi bi-cart-plus" aria-hidden="true"></span> إضافة للسلة';
                     }
                 });
             });
         });
     </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</section>
+
 }
-
-<style>
-    
-    .product-box {
-        background-color: #fff;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 20px;
-        text-align: center;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
-
-        .product-box:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-        }
-
-    .product-image-container {
-        height: 200px;
-        overflow: hidden;
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .product-image {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-        border-radius: 4px;
-    }
-
-    .product-box h3 {
-        font-size: 1.5rem;
-        margin-bottom: 10px;
-        color: #333;
-    }
-
-    .product-box .description {
-        font-size: 0.9rem;
-        color: #666;
-        margin-bottom: 15px;
-        flex-grow: 1;
-    }
-
-    .product-price-info {
-        margin-bottom: 10px;
-    }
-
-        .product-price-info .old-price {
-            text-decoration: line-through;
-            color: #aaa;
-            font-size: 0.9rem;
-            margin-right: 5px;
-        }
-
-        .product-price-info .current-price {
-            font-size: 1.3rem;
-            color: #e67e22;
-            font-weight: bold;
-        }
-
-    .discount-badge {
-        background-color: #e74c3c;
-        color: white;
-        padding: 3px 8px;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        margin-left: 10px;
-    }
-
-    .category-info, .stock-info {
-        font-size: 0.85rem;
-        color: #777;
-        margin-bottom: 5px;
-    }
-
-    .product-details-btn {
-        margin-top: 15px;
-        width: 100%;
-    }
-
-    .add-to-cart-btn {
-        margin-top: 10px;
-        width: 100%;
-    }
-
-        .add-to-cart-btn:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-
-    
-    .section ul {
-        list-style: none;
-        padding: 0;
-    }
-
-        .section ul li {
-            margin-bottom: 10px;
-            color: #555;
-        }
-
-    .section-title {
-        margin-bottom: 40px;
-        text-align: center;
-    }
-
-        .section-title h2 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #333;
-            position: relative;
-            display: inline-block;
-            padding-bottom: 10px;
-        }
-
-            .section-title h2::after {
-                content: '';
-                position: absolute;
-                width: 60px;
-                height: 4px;
-                background: #007bff;
-                bottom: 0;
-                left: 50%;
-                transform: translateX(-50%);
-                border-radius: 2px;
-            }
-
-        .section-title p {
-            margin-top: 15px;
-            font-size: 1.1rem;
-            color: #777;
-        }
-</style>

@@ -21,14 +21,14 @@
     <link href="~/assets/vendor/aos/aos.css" rel="stylesheet">
     <link href="~/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
     <link href="~/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
-
+    <meta name="user-authenticated" content="@User.Identity.IsAuthenticated.ToString().ToLower()" />
     <link href="~/assets/css/main.css" rel="stylesheet">
 
 </head>
 
-<body data-logged-in="@User.Identity.IsAuthenticated.ToString().ToLower() class="index-page">
+<body class="index-page">
+    <div id="preloader" ></div>
 
-    
     @using Microsoft.AspNetCore.Identity
     @using Store.Models // تأكد أن هذا يشير إلى الـ namespace الخاص بـ ApplicationUser
     @inject UserManager<ApplicationUser> UserManager
@@ -38,7 +38,7 @@
         <div class="container-fluid container-xl d-flex align-items-center justify-content-around ">
             <div class="user-actions d-flex align-items-center gap-3 ms-xl-auto">
                 <a asp-area="" asp-controller="Home" asp-action="Index" class="logo d-flex align-items-center ms-auto">
-                    
+                   
                     <h1 class="sitename">المتجر</h1> 
                 </a>
             </div>
@@ -78,7 +78,7 @@
             <div class="user-actions d-flex align-items-center gap-3 ">
                 @if (SignInManager.IsSignedIn(User))
                 {
-                    var user = await UserManager.GetUserAsync(User); 
+                    var user = await UserManager.GetUserAsync(User);
                     <div class="d-flex align-items-center">
                         <i class="bi bi-person-circle fs-5 orange-icon ms-2" aria-hidden="true"></i>
                         @if (user != null)
@@ -121,7 +121,7 @@
                         </div>
                     </a>
                     <a asp-area="Identity" asp-page="/Account/Register" class="auth-icon" title="التسجيل">
-                        
+                       
                         <div class="col text-center">
                             <i class="bi bi-person-plus fs-5 orange-icon" aria-label="التسجيل"></i>
                             <p class="orange-icon ">التسجيل</p>
@@ -220,7 +220,6 @@
 
     <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-    <div id="preloader"></div>
     <script src="~/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="~/assets/vendor/php-email-form/validate.js"></script>
     <script src="~/assets/vendor/aos/aos.js"></script>
