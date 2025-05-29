@@ -70,6 +70,42 @@ namespace Store.Controllers
 
             return View(product);
         }
+        [HttpGet]
+        public IActionResult GetDetails(int id)
+        {
+            var product = _context.Products
+                .Include(p => p.Cat)
+                .Where(p => p.Id == id)
+                .Select(p => new
+                {
+                    image = p.ProductImages.FirstOrDefault().ImageUrl ?? "/images/no-image.png",
+                    name = p.Name,
+                    shortDescription = p.ShortDescription,
+                    description = p.Description,
+                    price = p.Price,
+                    oldPrice = p.OldPrice,
+                    photo = p.Photo ?? "/images/no-image.png",
+                    stockQuantity = p.StockQuantity,
+                    brand = p.Brand,
+                    weight = p.Weight,
+                    dimensions = p.Dimensions,
+                    color = p.Color,
+                    material = p.Material,
+                    warranty = p.Warranty,
+                    averageRating = p.AverageRating,
+                    reviewCount = p.ReviewCount,
+                    isAvailable = p.IsAvailable,
+                    categoryName = p.Cat != null ? p.Cat.Name : "غير محدد"
+                })
+                .FirstOrDefault();
+
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            return Json(product);
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]

@@ -40,15 +40,16 @@ namespace Store.Controllers
 
             return Json(new { success = true });
         }
-
-        [HttpPost]
+        [HttpPost("Wishlist/AddFromWishlist")]
         [Authorize]
         public async Task<IActionResult> AddFromWishlist([FromBody] AddFromWishlistRequest request)
         {
-            var product = await _context.Products.FindAsync(request.ProductId);
-            if (product == null) return Json(new { success = false, message = "المنتج غير موجود" });
-
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var product = await _context.Products.FindAsync(request.ProductId);
+            if (product == null)
+                return Json(new { success = false, message = "المنتج غير موجود" });
+
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
                 .FirstOrDefaultAsync(c => c.UserId == userId && c.Status == CartStatus.Active);
@@ -75,10 +76,18 @@ namespace Store.Controllers
                 });
             }
 
+            var wishlistItem = await _context.Wishlists
+                .FirstOrDefaultAsync(w => w.UserId == userId && w.ProductId == request.ProductId);
+
+            if (wishlistItem != null)
+            {
+                _context.Wishlists.Remove(wishlistItem);
+            }
+
             await _context.SaveChangesAsync();
+
             return Json(new { success = true });
         }
-
         public class RemoveWishlistRequest { public int ItemId { get; set; } }
         public class AddFromWishlistRequest { public int ProductId { get; set; } }
     }

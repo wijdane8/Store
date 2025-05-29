@@ -2783,3 +2783,21 @@ section,
 
     }
 }
+.cart-item h5 a:hover {
+    color: var(--accent-color);
+    text-decoration: underline;
+}
+.modal-body p {
+    margin-bottom: 8px;
+}
+
+.modal-body strong {
+    color: #2c4964;
+    display: inline-block;
+    width: 150px;
+}
+
+.modal-body img {
+    max-height: 200px;
+    object-fit: cover;
+}

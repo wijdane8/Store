@@ -1,10 +1,9 @@
 ﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>المتجر - قمة التسوق الإلكتروني</title> 
+    <title>المتجر - قمة التسوق الإلكتروني</title>
     <meta name="description" content="متجر المتجر - وجهتك الأولى لأفضل المنتجات بجودة عالية">
     <meta name="keywords" content="تسوق، المتجر، إلكترونيات، موضة">
 
@@ -24,25 +23,24 @@
     <link href="~/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
     <meta name="user-authenticated" content="@User.Identity.IsAuthenticated.ToString().ToLower()" />
     <link href="~/assets/css/main.css" rel="stylesheet">
-
 </head>
 
 <body class="index-page">
-    <div id="preloader" ></div>
+    <div id="preloader"></div>
 
     @using Microsoft.AspNetCore.Identity
-    @using Store.Models // تأكد أن هذا يشير إلى الـ namespace الخاص بـ ApplicationUser
+    @using Store.Models
     @inject UserManager<ApplicationUser> UserManager
     @inject SignInManager<ApplicationUser> SignInManager
 
     <header id="header" class="header d-flex align-items-center fixed-top" dir="rtl">
-        <div class="container-fluid container-xl d-flex align-items-center justify-content-around ">
+        <div class="container-fluid container-xl d-flex align-items-center justify-content-around">
             <div class="user-actions d-flex align-items-center gap-3 ms-xl-auto">
                 <a asp-area="" asp-controller="Home" asp-action="Index" class="logo d-flex align-items-center ms-auto">
-                   
-                    <h1 class="sitename">المتجر</h1> 
+                    <h1 class="sitename">المتجر</h1>
                 </a>
             </div>
+
             <div class="user-actions d-flex align-items-center gap-3 ms-xl-auto">
                 <nav id="navmenu" class="navmenu">
                     <ul>
@@ -76,7 +74,7 @@
                 </nav>
             </div>
 
-            <div class="user-actions d-flex align-items-center gap-3 ">
+            <div class="user-actions d-flex align-items-center gap-3">
                 @if (SignInManager.IsSignedIn(User))
                 {
                     var user = await UserManager.GetUserAsync(User);
@@ -91,15 +89,15 @@
                             <span class="user-greeting">مرحباً!</span>
                         }
                     </div>
-                    <ul>
-                        <li class="nav-item">
+                    <ul >
+                        <li class="nav-item list-unstyled">
                             <a href="/Cart" class="nav-link">
                                 <i class="fas fa-shopping-cart"></i>
                                 سلة التسوق
-                                <span class="badge bg-primary cart-count">0</span> 
+                                <span class="badge bg-primary cart-count">0</span>
                             </a>
                         </li>
-                        <li class="nav-item">
+                        <li class="nav-item list-unstyled">
                             <a class="nav-link" href="/Wishlist">
                                 <i class="fas fa-heart"></i> قائمة الأمنيات
                             </a>
@@ -115,22 +113,19 @@
                 else
                 {
                     <a asp-area="Identity" asp-page="/Account/Login" class="auth-icon" title="تسجيل الدخول">
-                        
                         <div class="col text-center">
-                            <i class="bi bi-box-arrow-in-left fs-5 orange-icon " aria-label="تسجيل الدخول"></i>
-                            <p class="orange-icon ">تسجيل الدخول</p>
+                            <i class="bi bi-box-arrow-in-left fs-5 orange-icon" aria-label="تسجيل الدخول"></i>
+                            <p class="orange-icon">تسجيل الدخول</p>
                         </div>
                     </a>
                     <a asp-area="Identity" asp-page="/Account/Register" class="auth-icon" title="التسجيل">
-                       
                         <div class="col text-center">
                             <i class="bi bi-person-plus fs-5 orange-icon" aria-label="التسجيل"></i>
-                            <p class="orange-icon ">التسجيل</p>
+                            <p class="orange-icon">التسجيل</p>
                         </div>
                     </a>
                 }
             </div>
-
         </div>
     </header>
 
@@ -152,21 +147,19 @@
                     </div>
                 </div>
             </div>
-
         </section>
     }
-    <main class="main pt-5">
+
+    <main class="main pt-5 my-5">
         @RenderBody()
         <base href="~/" />
     </main>
 
     <footer id="footer" class="footer accent-background">
-
         <div class="container footer-top">
             <div class="row gy-4">
                 <div class="col-lg-5 col-md-12 footer-about">
                     <a asp-area="" asp-controller="Home" asp-action="Index" class="logo d-flex align-items-center">
-                        
                         <span class="sitename">المتجر</span>
                     </a>
                     <p>المتجر منصة تسوق رائدة تهدف إلى تقديم تجربة تسوق فريدة من نوعها بمنتجات عالية الجودة وخدمة عملاء مميزة.</p>
@@ -181,9 +174,9 @@
                 <div class="col-lg-2 col-6 footer-links">
                     <h4>روابط مفيدة</h4>
                     <ul>
-                        <li><a asp-area="" asp-controller="Home" asp-action="Index">الرئيسية</a></li> 
-                        <li><a asp-area="" asp-controller="Home" asp-action="About">عن المتجر</a></li> 
-                        <li><a asp-area="" asp-controller="Home" asp-action="Services">خدماتنا</a></li> 
+                        <li><a asp-area="" asp-controller="Home" asp-action="Index">الرئيسية</a></li>
+                        <li><a asp-area="" asp-controller="Home" asp-action="About">عن المتجر</a></li>
+                        <li><a asp-area="" asp-controller="Home" asp-action="Services">خدماتنا</a></li>
                         <li><a href="#">شروط الخدمة</a></li>
                         <li><a href="#">سياسة الخصوصية</a></li>
                     </ul>
@@ -206,7 +199,6 @@
                     <p class="mt-4"><strong>هاتف:</strong> <span>+966 55 123 4567</span></p>
                     <p><strong>ايميل:</strong> <span>info@zth.sa</span></p>
                 </div>
-
             </div>
         </div>
 
@@ -216,7 +208,6 @@
                 صمم بواسطة <a href="https://myStore.com/">فريق المتجر</a>
             </div>
         </div>
-
     </footer>
 
     <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
@@ -235,9 +226,6 @@
             user: '@User?.Identity?.Name'
         });
     </script>
-    
-</body>
-
-</html>
-
 @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
